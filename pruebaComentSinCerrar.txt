@@ -1,0 +1,10 @@
+var
+	[integer, float] : [a,b]
+endvar
+
+b = 100
+a = 100
+const c = "lalala"
+
+--/ primer --/ abri segundo coment pero no lo cerre, falta un delimitador de cierre /--
+

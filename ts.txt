@@ -1,0 +1,6 @@
+Nombre			Tipo			Valor			Longitud
+a			int			-			
+b			float			-			
+_100						100			
+_100						100			
+c			constString			"lalala"			1

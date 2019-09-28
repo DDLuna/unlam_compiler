@@ -1,0 +1,51 @@
+var
+	[integer,float,integer] : [a,b,k]
+	[integer, float] : [j, l]
+endvar
+
+const c = "pepe"
+const d = 3
+const e = 8.65
+
+a = 15
+b = 21111.566
+
+if a==b {
+	print a
+}else{
+	read b
+}
+
+if a==b {
+	print a
+}else{
+	if a == b {
+	read b
+     }
+}
+
+if a == b || d == e {
+	print "lala"
+}
+
+if a == b && d == e {
+	print "lala"
+}
+
+b = 5 mod a
+
+repeat a >= 3 {
+	print "hola"
+}
+
+a = b + 3 * ( 5 div 5)
+
+if !( a <> 4 )
+	print c	
+
+--/jojo/--
+
+--/holi --/hole --/ tercero /-- /-- hols/--
+
+
+
