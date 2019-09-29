@@ -24,7 +24,7 @@ git checkout -b nombre_sin_espacios
 modificar|agregar|borrar cosas
 git add .
 git commit -m "pequeño mensaje"
-git push origin master
+git push origin nombre_sin_espacios
 ```
 Crear un PR desde github.
 Merge y borrar branch
