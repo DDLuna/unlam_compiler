@@ -3,3 +3,4 @@ del y.tab.c
 del y.output
 del y.tab.h
 del Primera.exe
+del ts.txt
