@@ -20,7 +20,7 @@ struct struct_tablaSimbolos{
 };
 
 typedef struct arbol{
-	int nodo;
+	char *nodo;
 	struct arbol *izq;
 	struct arbol *der;
 }arbol;
@@ -30,6 +30,8 @@ void guardar_TS();
 void verificarExistencia();
 void escribirTS();
 void guardarCte_TS();
+arbol *crear_nodo(char *token, arbol *izq, arbol *der);
+arbol *crear_hoja(char *token);
 
 /********VARIABLES*********/
 struct struct_tablaSimbolos tablaSimbolos[1000];
@@ -43,7 +45,25 @@ char valorConst[31];
 int contador_variables = 0;
 
 // Punteros de árbol
-arbol *f_ptr;
+arbol *programa_ptr;
+arbol *inicio_variables_ptr;
+arbol *cuerpo_programa_ptr;
+arbol *sentencia_ptr;
+arbol *declaracion_ptr;
+arbol *listaTipos_ptr;
+arbol *tipo_ptr;
+arbol *lista_var_ptr;
+arbol *declaracion_constante_ptr;
+arbol *tipo_cte_ptr;
+arbol *asignacion_ptr;
+arbol *seleccion_ptr;
+arbol *iteracion_ptr;
+arbol *condicion_ptr;
+arbol *comparacion_ptr;
+arbol *comparador_ptr;
+arbol *expresion_ptr;
+arbol *termino_ptr;
+arbol *factor_ptr;
 %}
 
 /******SECCION TOKENS******/
@@ -179,29 +199,29 @@ comparador: OP_COMP {printf (" Igual ");}|
 			OP_DIST {printf (" Distinto ");}
 			;
 
-expresion:	expresion {printf (" Suma ");} OP_SUMA termino |
-		    expresion {printf (" Resta ");} OP_RESTA termino |
+expresion:	expresion OP_SUMA termino {expresion_ptr = crear_nodo("+", expresion_ptr, termino_ptr);}|
+		    expresion OP_RESTA termino {expresion_ptr = crear_nodo("-", expresion_ptr, termino_ptr);} |
 		    termino
 		    ;
 
-termino:	termino {printf (" Multiplicacion ");} OP_MULT factor |
-			termino {printf (" Division ");} OP_DIV factor |
-			termino {printf (" Division Entera ");} DIV_ENT factor |
-			termino {printf (" Modulo ");} MODULO factor |
-			factor
+termino:	termino OP_MULT factor {termino_ptr = crear_nodo("*", termino_ptr, factor_ptr);}|
+			termino OP_DIV factor {termino_ptr = crear_nodo("/", termino_ptr, factor_ptr);}|
+			termino DIV_ENT factor {termino_ptr = crear_nodo("div", termino_ptr, factor_ptr);}|
+			termino MODULO factor {termino_ptr = crear_nodo("mod", termino_ptr, factor_ptr);}|
+			factor {termino_ptr = factor_ptr;}
 			;
 
-factor:	{printf (" Parentesis abierto ");} PAR_A expresion PAR_C {printf (" Parentesis cerrado ");}|
-		ID {printf ("'%s'",$1);}|
-		CONST_ENT {guardar_TS($1,"int", !ES_ID); printf ("'%s'",$1);}|
-		CONST_REAL {guardar_TS($1,"float", !ES_ID); printf ("'%s'",$1);}
+factor: PAR_A expresion PAR_C {factor_ptr = expresion_ptr;}|
+		ID {printf ("'%s'",$1); factor_ptr = crear_hoja($1);}|		// no deberia guardar $$ en la TS?
+		CONST_ENT {guardar_TS($1,"int", !ES_ID); printf ("'%s'",$1); factor_ptr = crear_hoja($1);}|
+		CONST_REAL {guardar_TS($1,"float", !ES_ID); printf ("'%s'",$1); factor_ptr = crear_hoja($1);}
 		;				  
 
 %%
 
 /******SECCION CODIGO******/
 
-arbol *crear_nodo(char token, arbol *izq, arbol *der) {
+arbol *crear_nodo(char *token, arbol *izq, arbol *der) {
 	arbol *a = (arbol *) malloc(sizeof(arbol));
 	a->nodo = token;
 	a->izq = izq;
@@ -209,7 +229,7 @@ arbol *crear_nodo(char token, arbol *izq, arbol *der) {
 	return a;
 }
 
-arbol *crear_hoja(char token) {
+arbol *crear_hoja(char *token) {
 	return crear_nodo(token, NULL, NULL);
 }
 
