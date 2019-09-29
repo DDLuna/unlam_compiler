@@ -11,3 +11,20 @@ Usar 1_borrar.bat para eliminar los archivos generados.
 
 ## Ej
 primera.exe prueba.txt
+---
+# Git
+[Descargar git](https://gitforwindows.org/)  
+Clonar repo:  
+```
+git clone git@github.com:DDLuna/unlam_compiler.git
+```
+Hacer cambios:
+```
+git checkout -b nombre_sin_espacios
+modificar|agregar|borrar cosas
+git add .
+git commit -m "pequeño mensaje"
+git push origin master
+```
+Crear un PR desde github.
+Merge y borrar branch
