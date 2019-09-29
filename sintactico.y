@@ -20,7 +20,7 @@ struct struct_tablaSimbolos{
 };
 
 typedef struct arbol{
-	char *nodo;
+	int nodo;
 	struct arbol *izq;
 	struct arbol *der;
 }arbol;
@@ -30,8 +30,8 @@ void guardar_TS();
 void verificarExistencia();
 void escribirTS();
 void guardarCte_TS();
-arbol *crear_nodo(char *token, arbol *izq, arbol *der);
-arbol *crear_hoja(char *token);
+arbol *crear_nodo(int nodetype, arbol *izq, arbol *der);
+arbol *crear_hoja(int nodetype);
 
 /********VARIABLES*********/
 struct struct_tablaSimbolos tablaSimbolos[1000];
@@ -43,29 +43,15 @@ int contadorTipoDatoLeer = 0;
 char valorConst[31];
 
 int contador_variables = 0;
-
-// Punteros de árbol
-arbol *programa_ptr;
-arbol *inicio_variables_ptr;
-arbol *cuerpo_programa_ptr;
-arbol *sentencia_ptr;
-arbol *declaracion_ptr;
-arbol *listaTipos_ptr;
-arbol *tipo_ptr;
-arbol *lista_var_ptr;
-arbol *declaracion_constante_ptr;
-arbol *tipo_cte_ptr;
-arbol *asignacion_ptr;
-arbol *seleccion_ptr;
-arbol *iteracion_ptr;
-arbol *condicion_ptr;
-arbol *comparacion_ptr;
-arbol *comparador_ptr;
-arbol *expresion_ptr;
-arbol *termino_ptr;
-arbol *factor_ptr;
 %}
 
+%union{
+char* id;
+int num;
+double real; 
+char* string;
+struct arbol *ast;
+}
 /******SECCION TOKENS******/
 
 %token OP_SUMA
@@ -106,30 +92,28 @@ arbol *factor_ptr;
 %token COMA
 %token PUNTO
 %token DOS_PUNTOS
+
 %token <id> ID
 %token <num> CONST_ENT
 %token <real> CONST_REAL
 %token <string> CONST_STRING
-
-%union{
-char* id;
-char* num;
-char* real; 
-char* string;
-}
+%type <ast> expresion
+%type <ast> termino
+%type <ast> factor
+%type <ast> asignacion
 
 /******SECCION DEFINICION DE REGLAS******/
 
 %%
-programaStart: {printf("\nInicio compilacion\n-----------------------------------\n");} programa {escribirTS(); printf ("\n-----------------------------------\nCompilacion OK\n");}
+programaStart: programa {escribirTS(); printf("Compilación exitosa\n");}
 			;
 
-programa: inicioVariables {printf("\n\nSeccion cuerpo programa\n");} cuerpoPrograma {printf("\n\nFin cuerpo programa");}|
-		  {printf("\n\nSeccion cuerpo programa\n");} cuerpoPrograma {printf("\n\nFin cuerpo programa");}|	
+programa: inicioVariables  cuerpoPrograma |
+		   cuerpoPrograma |	
 		  inicioVariables
 		  ;
 
-inicioVariables: {printf("Seccion declaracion de variables\n\n");} DEC_VAR declaracion FIN_DECVAR {printf ("\n\nFin declaracion de variables\n");}
+inicioVariables:  DEC_VAR declaracion FIN_DECVAR 
 				 ;
 
 cuerpoPrograma: cuerpoPrograma {printf ("\n");} sentencia |
@@ -137,8 +121,8 @@ cuerpoPrograma: cuerpoPrograma {printf ("\n");} sentencia |
 				;
 
 sentencia: asignacion |
-		   {printf ("\n\tRepeat mientras ");} iteracion |
-		   {printf ("\n\t If ");} seleccion |
+		    iteracion |
+		    seleccion |
 		   PRINT CONST_STRING {guardar_TS($2, "string", !ES_ID); printf ("\t\tPrint %s",$2);}|
 		   PRINT ID {printf ("\t\tPrint %s",$2);}|
 		   READ ID {printf ("\t\tRead %s",$2);}|
@@ -154,21 +138,53 @@ listaTipos: listaTipos COMA tipo |
 			tipo
 			;
 
-tipo: ENTERO {strcpy(vectorTipoDato[contadorTipoDatoEscribir],"int"); contadorTipoDatoEscribir++; contador_variables++; printf ("Entero "); }|
-	  FLOTANTE {strcpy(vectorTipoDato[contadorTipoDatoEscribir],"float"); contadorTipoDatoEscribir++; contador_variables++; printf ("Flotante ");}
-	  ;
+tipo: ENTERO {
+		strcpy(vectorTipoDato[contadorTipoDatoEscribir],"int");
+		contadorTipoDatoEscribir++;
+		contador_variables++;
+		printf ("Entero ");
+	}|
+	FLOTANTE {
+		strcpy(vectorTipoDato[contadorTipoDatoEscribir],"float");
+		contadorTipoDatoEscribir++;
+		contador_variables++;
+		printf("Flotante ");
+	}
+	;
 
-listaVar: listaVar COMA ID {if(contador_variables > 0){guardar_TS($3,vectorTipoDato[contadorTipoDatoLeer], ES_ID); contadorTipoDatoLeer++; contador_variables--;} printf ("%s ",$3);}|
-		  ID {if(contador_variables > 0){guardar_TS($1,vectorTipoDato[contadorTipoDatoLeer], ES_ID); contadorTipoDatoLeer++; contador_variables--;} printf ("%s ",$1);}
-		  ;
+listaVar: listaVar COMA ID {
+		if(contador_variables > 0) {
+			guardar_TS($3,vectorTipoDato[contadorTipoDatoLeer], ES_ID);
+			contadorTipoDatoLeer++;
+			contador_variables--;
+		}
+		printf ("%s ",$3);
+	}|
+	ID {
+		if(contador_variables > 0) {
+			guardar_TS($1,vectorTipoDato[contadorTipoDatoLeer], ES_ID);
+			contadorTipoDatoLeer++;
+			contador_variables--;
+		}
+		printf("%s ",$1);
+	}
+	;
 
-declaracionConstante: CONSTANTE ID OP_ASIG {printf ("\tDeclaraste una constante de tipo");} tipoCte {guardarCte_TS($2,tipo_dato);}
-					  ;
+declaracionConstante: CONSTANTE ID OP_ASIG {
+		printf("\tDeclaraste una constante de tipo");
+	} tipoCte {
+		guardarCte_TS($2,tipo_dato);
+	}
+	;
 
-tipoCte: CONST_STRING {tipo_dato = "constString"; strcpy(valorConst, $1); printf ("String");}| //si queremos que guarde por separado la cte, agregar guardar_TS($1,tipo_dato, !ES_ID
-		 CONST_ENT {tipo_dato = "constInt"; strcpy(valorConst, $1); printf ("Entera");}|
-		 CONST_REAL {tipo_dato = "constFloat"; strcpy(valorConst, $1); printf ("Flotante");}
-		 ;
+tipoCte: CONST_STRING {
+		tipo_dato = "constString";
+		strcpy(valorConst, $1);
+		printf ("String");
+	}| //si queremos que guarde por separado la cte, agregar guardar_TS($1,tipo_dato, !ES_ID
+	CONST_ENT {tipo_dato = "constInt"; itoa($1, valorConst, 10); printf("Entera");}|
+	CONST_REAL {tipo_dato = "constFloat"; ftoa($1, valorConst, 10); printf("Flotante");}
+	;
 
 asignacion: ID {verificarExistencia($1);}
 	OP_ASIG {printf ("\tAsignaste ");} expresion {printf (" a '%s'",$1);} 
@@ -199,38 +215,42 @@ comparador: OP_COMP {printf (" Igual ");}|
 			OP_DIST {printf (" Distinto ");}
 			;
 
-expresion:	expresion OP_SUMA termino {expresion_ptr = crear_nodo("+", expresion_ptr, termino_ptr);}|
-		    expresion OP_RESTA termino {expresion_ptr = crear_nodo("-", expresion_ptr, termino_ptr);} |
+expresion:	expresion OP_SUMA termino {$$ = crear_nodo('+', $1, $3);}|
+		    expresion OP_RESTA termino {$$ = crear_nodo('-', $1, $3);} |
 		    termino
 		    ;
 
-termino:	termino OP_MULT factor {termino_ptr = crear_nodo("*", termino_ptr, factor_ptr);}|
-			termino OP_DIV factor {termino_ptr = crear_nodo("/", termino_ptr, factor_ptr);}|
-			termino DIV_ENT factor {termino_ptr = crear_nodo("div", termino_ptr, factor_ptr);}|
-			termino MODULO factor {termino_ptr = crear_nodo("mod", termino_ptr, factor_ptr);}|
-			factor {termino_ptr = factor_ptr;}
+termino:	termino OP_MULT factor {$$ = crear_nodo('*', $1, $3);}|
+			termino OP_DIV factor {$$ = crear_nodo('/', $1, $3);}|
+			termino DIV_ENT factor {$$ = crear_nodo('D', $1, $3);}|
+			termino MODULO factor {$$ = crear_nodo('M', $1, $3);}|
+			factor {$$ = $1;}
 			;
 
-factor: PAR_A expresion PAR_C {factor_ptr = expresion_ptr;}|
-		ID {printf ("'%s'",$1); factor_ptr = crear_hoja($1);}|		// no deberia guardar $$ en la TS?
-		CONST_ENT {guardar_TS($1,"int", !ES_ID); printf ("'%s'",$1); factor_ptr = crear_hoja($1);}|
-		CONST_REAL {guardar_TS($1,"float", !ES_ID); printf ("'%s'",$1); factor_ptr = crear_hoja($1);}
+factor: PAR_A expresion PAR_C {$$ = $2;}|
+		ID {printf("'%s'",$1); $$ = crear_hoja($1);}|		// no deberia guardar $$ en la TS?
+		CONST_ENT {guardar_TS($1,"int", !ES_ID); printf ("'%s'",$1); $$ = crear_hoja($1);}|
+		CONST_REAL {guardar_TS($1,"float", !ES_ID); printf ("'%s'",$1); $$ = crear_hoja($1);}
 		;				  
 
 %%
 
 /******SECCION CODIGO******/
 
-arbol *crear_nodo(char *token, arbol *izq, arbol *der) {
-	arbol *a = (arbol *) malloc(sizeof(arbol));
-	a->nodo = token;
+arbol *crear_nodo(int nodetype, arbol *izq, arbol *der) {
+	arbol *a = malloc(sizeof(arbol));
+	if (!a) {
+		yyerror("No hay memoria");
+		exit(0);
+	}
+	a->nodo = nodetype;
 	a->izq = izq;
 	a->der = der;
 	return a;
 }
 
-arbol *crear_hoja(char *token) {
-	return crear_nodo(token, NULL, NULL);
+arbol *crear_hoja(int nodetype) {
+	return crear_nodo(nodetype, NULL, NULL);
 }
 
 void guardar_TS(char* nombre, char* tipo, int es_id){
