@@ -19,6 +19,12 @@ struct struct_tablaSimbolos{
 	char longitud[10];
 };
 
+typedef struct arbol{
+	int nodo;
+	struct arbol *izq;
+	struct arbol *der;
+}arbol;
+
 /***** FUNCIONES ****/
 void guardar_TS();
 void verificarExistencia();
@@ -36,6 +42,8 @@ char valorConst[31];
 
 int contador_variables = 0;
 
+// Punteros de árbol
+arbol *f_ptr;
 %}
 
 /******SECCION TOKENS******/
@@ -193,6 +201,17 @@ factor:	{printf (" Parentesis abierto ");} PAR_A expresion PAR_C {printf (" Pare
 
 /******SECCION CODIGO******/
 
+arbol *crear_nodo(char token, arbol *izq, arbol *der) {
+	arbol *a = (arbol *) malloc(sizeof(arbol));
+	a->nodo = token;
+	a->izq = izq;
+	a->der = der;
+	return a;
+}
+
+arbol *crear_hoja(char token) {
+	return crear_nodo(token, NULL, NULL);
+}
 
 void guardar_TS(char* nombre, char* tipo, int es_id){
 	int i;
@@ -278,7 +297,6 @@ int main(int argc,char *argv[]){
 		yyparse();
 	}
   	fclose(yyin);
-
   	return 0;
 }
 
