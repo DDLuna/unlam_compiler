@@ -106,45 +106,45 @@ struct arbol *ast;
 
 %%
 programaStart: programa {escribirTS(); printf("Compilación exitosa\n");}
-			;
+	;
 
-programa: inicioVariables  cuerpoPrograma |
-		   cuerpoPrograma |	
-		  inicioVariables
-		  ;
+programa: inicioVariables  cuerpoPrograma
+	| cuerpoPrograma
+	| inicioVariables
+	;
 
-inicioVariables:  DEC_VAR declaracion FIN_DECVAR 
-				 ;
+inicioVariables: DEC_VAR declaracion FIN_DECVAR 
+	;
 
-cuerpoPrograma: cuerpoPrograma {printf ("\n");} sentencia |
-				{printf ("\n");} sentencia
-				;
+cuerpoPrograma: cuerpoPrograma {printf ("\n");} sentencia 
+	| {printf ("\n");} sentencia
+	;
 
-sentencia: asignacion |
-		    iteracion |
-		    seleccion |
-		   PRINT CONST_STRING {guardar_TS($2, "string", !ES_ID); printf ("\t\tPrint %s",$2);}|
-		   PRINT ID {printf ("\t\tPrint %s",$2);}|
-		   READ ID {printf ("\t\tRead %s",$2);}|
-		   declaracionConstante
-		   ;
+sentencia: asignacion
+	| iteracion
+	| seleccion
+	| PRINT CONST_STRING {guardar_TS($2, "string", !ES_ID); printf ("\t\tPrint %s",$2);}
+	| PRINT ID {printf ("\t\tPrint %s",$2);}
+	| READ ID {printf ("\t\tRead %s",$2);}
+	| declaracionConstante
+	;
 
 
-declaracion: declaracion COR_A {printf ("\ttipos: ");} listaTipos COR_C DOS_PUNTOS COR_A {printf ("\n\tvariables: ");} listaVar COR_C |
-		     COR_A {printf ("\ttipos: ");} listaTipos COR_C DOS_PUNTOS COR_A {printf ("\n\tvariables: ");} listaVar COR_C
-			 ;
+declaracion: declaracion COR_A {printf ("\ttipos: ");} listaTipos COR_C DOS_PUNTOS COR_A {printf ("\n\tvariables: ");} listaVar COR_C 
+	| COR_A {printf ("\ttipos: ");} listaTipos COR_C DOS_PUNTOS COR_A {printf ("\n\tvariables: ");} listaVar COR_C
+	;
 
-listaTipos: listaTipos COMA tipo |
-			tipo
-			;
+listaTipos: listaTipos COMA tipo
+	| tipo
+	;
 
 tipo: ENTERO {
 		strcpy(vectorTipoDato[contadorTipoDatoEscribir],"int");
 		contadorTipoDatoEscribir++;
 		contador_variables++;
 		printf ("Entero ");
-	}|
-	FLOTANTE {
+	}
+	| FLOTANTE {
 		strcpy(vectorTipoDato[contadorTipoDatoEscribir],"float");
 		contadorTipoDatoEscribir++;
 		contador_variables++;
@@ -159,8 +159,8 @@ listaVar: listaVar COMA ID {
 			contador_variables--;
 		}
 		printf ("%s ",$3);
-	}|
-	ID {
+	}
+	| ID {
 		if(contador_variables > 0) {
 			guardar_TS($1,vectorTipoDato[contadorTipoDatoLeer], ES_ID);
 			contadorTipoDatoLeer++;
@@ -181,57 +181,56 @@ tipoCte: CONST_STRING {
 		tipo_dato = "constString";
 		strcpy(valorConst, $1);
 		printf ("String");
-	}| //si queremos que guarde por separado la cte, agregar guardar_TS($1,tipo_dato, !ES_ID
-	CONST_ENT {tipo_dato = "constInt"; itoa($1, valorConst, 10); printf("Entera");}|
-	CONST_REAL {tipo_dato = "constFloat"; ftoa($1, valorConst, 10); printf("Flotante");}
+	} //si queremos que guarde por separado la cte, agregar guardar_TS($1,tipo_dato, !ES_ID
+	| CONST_ENT {tipo_dato = "constInt"; itoa($1, valorConst, 10); printf("Entera");}
+	| CONST_REAL {tipo_dato = "constFloat"; ftoa($1, valorConst, 10); printf("Flotante");}
 	;
 
-asignacion: ID {verificarExistencia($1);}
-	OP_ASIG {printf ("\tAsignaste ");} expresion {printf (" a '%s'",$1);} 
-			;
+asignacion: ID {verificarExistencia($1);} OP_ASIG {printf ("\tAsignaste ");} expresion {printf (" a '%s'",$1);} 
+	;
 
-seleccion:  IF condicion LLAVE_A cuerpoPrograma LLAVE_C {printf ("\n\tElse ");} ELSE LLAVE_A cuerpoPrograma LLAVE_C {printf ("\n");}|
-		    IF condicion LLAVE_A cuerpoPrograma LLAVE_C {printf ("\n");}|
-		    IF condicion {printf ("\n\t");} sentencia {printf ("\n");} 
-		   ;
+seleccion:  IF condicion LLAVE_A cuerpoPrograma LLAVE_C {printf ("\n\tElse ");} ELSE LLAVE_A cuerpoPrograma LLAVE_C {printf ("\n");}
+	| IF condicion LLAVE_A cuerpoPrograma LLAVE_C {printf ("\n");}
+	| IF condicion {printf ("\n\t");} sentencia {printf ("\n");} 
+	;
 
 iteracion: REPEAT condicion LLAVE_A cuerpoPrograma LLAVE_C {printf ("\n");}
-		   ;
+   ;
 
-condicion: comparacion |
-		   comparacion {printf ("And\n");} AND comparacion |
-		   comparacion {printf ("Or\n");} OR comparacion 
-		   ;
+condicion: comparacion
+	| comparacion {printf ("And\n");} AND comparacion
+	| comparacion {printf ("Or\n");} OR comparacion 
+	;
 
-comparacion: expresion comparador expresion |
-			 OP_NEG {printf ("Negado");} PAR_A expresion comparador expresion PAR_C
-			 ;
+comparacion: expresion comparador expresion
+	| OP_NEG {printf ("Negado");} PAR_A expresion comparador expresion PAR_C
+	;
 
-comparador: OP_COMP {printf (" Igual ");}|
-			OP_MAYOR {printf (" Mayor ");}|
-			OP_MENOR {printf (" Menor ");}|
-			OP_MAYIG {printf (" Mayor O Igual ");}|
-			OP_MENIG {printf (" Menor O Igual ");}|
-			OP_DIST {printf (" Distinto ");}
-			;
+comparador: OP_COMP {printf (" Igual ");}
+	| OP_MAYOR {printf (" Mayor ");}
+	| OP_MENOR {printf (" Menor ");}
+	| OP_MAYIG {printf (" Mayor O Igual ");}
+	| OP_MENIG {printf (" Menor O Igual ");}
+	| OP_DIST {printf (" Distinto ");}
+	;
 
-expresion:	expresion OP_SUMA termino {$$ = crear_nodo('+', $1, $3);}|
-		    expresion OP_RESTA termino {$$ = crear_nodo('-', $1, $3);} |
-		    termino
-		    ;
+expresion: expresion OP_SUMA termino {$$ = crear_nodo('+', $1, $3);}
+	| expresion OP_RESTA termino {$$ = crear_nodo('-', $1, $3);}
+	| termino
+	;
 
-termino:	termino OP_MULT factor {$$ = crear_nodo('*', $1, $3);}|
-			termino OP_DIV factor {$$ = crear_nodo('/', $1, $3);}|
-			termino DIV_ENT factor {$$ = crear_nodo('D', $1, $3);}|
-			termino MODULO factor {$$ = crear_nodo('M', $1, $3);}|
-			factor {$$ = $1;}
-			;
+termino: termino OP_MULT factor {$$ = crear_nodo('*', $1, $3);}
+	| termino OP_DIV factor {$$ = crear_nodo('/', $1, $3);}
+	| termino DIV_ENT factor {$$ = crear_nodo('D', $1, $3);}
+	| termino MODULO factor {$$ = crear_nodo('M', $1, $3);}
+	| factor {$$ = $1;}
+	;
 
-factor: PAR_A expresion PAR_C {$$ = $2;}|
-		ID {printf("'%s'",$1); $$ = crear_hoja($1);}|		// no deberia guardar $$ en la TS?
-		CONST_ENT {guardar_TS($1,"int", !ES_ID); printf ("'%s'",$1); $$ = crear_hoja($1);}|
-		CONST_REAL {guardar_TS($1,"float", !ES_ID); printf ("'%s'",$1); $$ = crear_hoja($1);}
-		;				  
+factor: PAR_A expresion PAR_C {$$ = $2;}
+	| ID {printf("'%s'",$1); $$ = crear_hoja($1);}		// no deberia guardar $$ en la TS?
+	| CONST_ENT {guardar_TS($1,"int", !ES_ID); printf ("'%s'",$1); $$ = crear_hoja($1);}
+	| CONST_REAL {guardar_TS($1,"float", !ES_ID); printf ("'%s'",$1); $$ = crear_hoja($1);}
+	;				  
 
 %%
 
