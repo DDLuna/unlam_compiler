@@ -12,7 +12,7 @@ FILE  *yyin;
 
 //Structs
 	//TS
-struct struct_tablaSimbolos{
+struct tabla_simbolos{
 	char nombre[100];
 	char tipo[15];
 	char valor[100];
@@ -20,35 +20,36 @@ struct struct_tablaSimbolos{
 };
 
 typedef struct arbol{
-	int nodo;
+	char* nodo;
+	char* tipo;
 	struct arbol *izq;
 	struct arbol *der;
 }arbol;
 
 /***** FUNCIONES ****/
-void guardar_TS();
-void verificarExistencia();
-void escribirTS();
-void guardarCte_TS();
-arbol *crear_nodo(int nodetype, arbol *izq, arbol *der);
-arbol *crear_hoja(int nodetype);
+void guardar_tabla_de_simbolos();
+void verificar_existencia();
+void escribir_tabla_de_simbolos(:);
+void guardar_cte_tabla_de_simbolos();
+arbol* crear_nodo(char* elemento, char* tipo, arbol *izq, arbol *der);
+arbol* crear_hoja(char* elemento, char* tipo);
 
 /********VARIABLES*********/
-struct struct_tablaSimbolos tablaSimbolos[1000];
-int punteroTablaSimbolos = 0;
+struct tabla_simbolos tabla_simbolos_s[1000];
+int puntero_tabla_simbolos = 0;
 char* tipo_dato;
-char vectorTipoDato[1000][10];
-int contadorTipoDatoEscribir = 0;
-int contadorTipoDatoLeer = 0;
-char valorConst[31];
+char vector_tipo_de_dato[1000][10];
+int contador_tipo_dato_escribir = 0;
+int contador_tipo_dato_leer = 0;
+char valor_const[31];
 
 int contador_variables = 0;
 %}
 
 %union{
 char* id;
-int num;
-double real; 
+char* num;
+char* real; 
 char* string;
 struct arbol *ast;
 }
@@ -105,7 +106,7 @@ struct arbol *ast;
 /******SECCION DEFINICION DE REGLAS******/
 
 %%
-programaStart: programa {escribirTS(); printf("Compilación exitosa\n");}
+programaStart: programa {escribir_tabla_de_simbolos(); printf("Compilación exitosa\n");}
 	;
 
 programa: inicioVariables  cuerpoPrograma
@@ -123,7 +124,7 @@ cuerpoPrograma: cuerpoPrograma {printf ("\n");} sentencia
 sentencia: asignacion
 	| iteracion
 	| seleccion
-	| PRINT CONST_STRING {guardar_TS($2, "string", !ES_ID); printf ("\t\tPrint %s",$2);}
+	| PRINT CONST_STRING {guardar_tabla_de_simbolos($2, "string", !ES_ID); printf ("\t\tPrint %s",$2);}
 	| PRINT ID {printf ("\t\tPrint %s",$2);}
 	| READ ID {printf ("\t\tRead %s",$2);}
 	| declaracionConstante
@@ -139,14 +140,14 @@ listaTipos: listaTipos COMA tipo
 	;
 
 tipo: ENTERO {
-		strcpy(vectorTipoDato[contadorTipoDatoEscribir],"int");
-		contadorTipoDatoEscribir++;
+		strcpy(vector_tipo_de_dato[contador_tipo_dato_escribir],"int");
+		contador_tipo_dato_escribir++;
 		contador_variables++;
 		printf ("Entero ");
 	}
 	| FLOTANTE {
-		strcpy(vectorTipoDato[contadorTipoDatoEscribir],"float");
-		contadorTipoDatoEscribir++;
+		strcpy(vector_tipo_de_dato[contador_tipo_dato_escribir],"float");
+		contador_tipo_dato_escribir++;
 		contador_variables++;
 		printf("Flotante ");
 	}
@@ -154,16 +155,16 @@ tipo: ENTERO {
 
 listaVar: listaVar COMA ID {
 		if(contador_variables > 0) {
-			guardar_TS($3,vectorTipoDato[contadorTipoDatoLeer], ES_ID);
-			contadorTipoDatoLeer++;
+			guardar_tabla_de_simbolos($3,vector_tipo_de_dato[contador_tipo_dato_leer], ES_ID);
+			contador_tipo_dato_leer++;
 			contador_variables--;
 		}
 		printf ("%s ",$3);
 	}
 	| ID {
 		if(contador_variables > 0) {
-			guardar_TS($1,vectorTipoDato[contadorTipoDatoLeer], ES_ID);
-			contadorTipoDatoLeer++;
+			guardar_tabla_de_simbolos($1,vector_tipo_de_dato[contador_tipo_dato_leer], ES_ID);
+			contador_tipo_dato_leer++;
 			contador_variables--;
 		}
 		printf("%s ",$1);
@@ -173,20 +174,20 @@ listaVar: listaVar COMA ID {
 declaracionConstante: CONSTANTE ID OP_ASIG {
 		printf("\tDeclaraste una constante de tipo");
 	} tipoCte {
-		guardarCte_TS($2,tipo_dato);
+		guardar_cte_tabla_de_simbolos($2,tipo_dato);
 	}
 	;
 
 tipoCte: CONST_STRING {
 		tipo_dato = "constString";
-		strcpy(valorConst, $1);
+		strcpy(valor_const, $1);
 		printf ("String");
-	} //si queremos que guarde por separado la cte, agregar guardar_TS($1,tipo_dato, !ES_ID
-	| CONST_ENT {tipo_dato = "constInt"; itoa($1, valorConst, 10); printf("Entera");}
-	| CONST_REAL {tipo_dato = "constFloat"; ftoa($1, valorConst, 10); printf("Flotante");}
+	} //si queremos que guarde por separado la cte, agregar guardar_tabla_de_simbolos($1,tipo_dato, !ES_ID
+	| CONST_ENT {tipo_dato = "constInt"; itoa($1, valor_const, 10); printf("Entera");}
+	| CONST_REAL {tipo_dato = "constFloat"; ftoa($1, valor_const, 10); printf("Flotante");}
 	;
 
-asignacion: ID {verificarExistencia($1);} OP_ASIG {printf ("\tAsignaste ");} expresion {printf (" a '%s'",$1);} 
+asignacion: ID {verificar_existencia($1);} OP_ASIG {printf ("\tAsignaste ");} expresion {printf (" a '%s'",$1);} 
 	;
 
 seleccion:  IF condicion LLAVE_A cuerpoPrograma LLAVE_C {printf ("\n\tElse ");} ELSE LLAVE_A cuerpoPrograma LLAVE_C {printf ("\n");}
@@ -214,102 +215,103 @@ comparador: OP_COMP {printf (" Igual ");}
 	| OP_DIST {printf (" Distinto ");}
 	;
 
-expresion: expresion OP_SUMA termino {$$ = crear_nodo('+', $1, $3);}
-	| expresion OP_RESTA termino {$$ = crear_nodo('-', $1, $3);}
+expresion: expresion OP_SUMA termino {$$ = crear_nodo("+", NULL, $1, $3);}
+	| expresion OP_RESTA termino {$$ = crear_nodo("-", NULL, $1, $3);}
 	| termino
 	;
 
-termino: termino OP_MULT factor {$$ = crear_nodo('*', $1, $3);}
-	| termino OP_DIV factor {$$ = crear_nodo('/', $1, $3);}
-	| termino DIV_ENT factor {$$ = crear_nodo('D', $1, $3);}
-	| termino MODULO factor {$$ = crear_nodo('M', $1, $3);}
+termino: termino OP_MULT factor {$$ = crear_nodo("*", NULL, $1, $3);}
+	| termino OP_DIV factor {$$ = crear_nodo("/", NULL, $1, $3);}
+	| termino DIV_ENT factor {$$ = crear_nodo("DIV", NULL, $1, $3);}
+	| termino MODULO factor {$$ = crear_nodo("MOD", NULL, $1, $3);}
 	| factor {$$ = $1;}
 	;
 
 factor: PAR_A expresion PAR_C {$$ = $2;}
 	| ID {printf("'%s'",$1); $$ = crear_hoja($1);}		// no deberia guardar $$ en la TS?
-	| CONST_ENT {guardar_TS($1,"int", !ES_ID); printf ("'%s'",$1); $$ = crear_hoja($1);}
-	| CONST_REAL {guardar_TS($1,"float", !ES_ID); printf ("'%s'",$1); $$ = crear_hoja($1);}
+	| CONST_ENT {guardar_tabla_de_simbolos($1,"int", !ES_ID); printf ("'%s'",$1); $$ = crear_hoja($1, "real");}
+	| CONST_REAL {guardar_tabla_de_simbolos($1,"float", !ES_ID); printf ("'%s'",$1); $$ = crear_hoja($1, "real");}
 	;				  
 
 %%
 
 /******SECCION CODIGO******/
 
-arbol *crear_nodo(int nodetype, arbol *izq, arbol *der) {
+arbol* crear_nodo(char* elemento, char* tipo, arbol *der) {
 	arbol *a = malloc(sizeof(arbol));
 	if (!a) {
 		yyerror("No hay memoria");
 		exit(0);
 	}
-	a->nodo = nodetype;
+	a->nodo = elemento;
+	a->tipo = tipo;
 	a->izq = izq;
 	a->der = der;
 	return a;
 }
 
-arbol *crear_hoja(int nodetype) {
-	return crear_nodo(nodetype, NULL, NULL);
+arbol* crear_hoja(char* elemento, char* tipo) {
+	return crear_nodo(elemento, tipo, NULL, NULL);
 }
 
-void guardar_TS(char* nombre, char* tipo, int es_id){
+void guardar_tabla_de_simbolos(char* nombre, char* tipo, int es_id){
 	int i;
 	char cad[10];
 	char guion[30] = "_";
-	for(i = 0; i < punteroTablaSimbolos; i++){
-		if(strcmp(tablaSimbolos[i].nombre, nombre) == 0){ //verifico que el nombre del ID sea único
+	for(i = 0; i < puntero_tabla_simbolos; i++){
+		if(strcmp(tabla_simbolos_s[i].nombre, nombre) == 0){ //verifico que el nombre del ID sea único
 			printf("ID con nombre repetido. Error de compilación");
 			exit(1);
 		}
 	}
 
 	if(es_id){
-		strcpy(tablaSimbolos[punteroTablaSimbolos].nombre, nombre);
-		strcpy(tablaSimbolos[punteroTablaSimbolos].tipo, tipo); //agrego los datos. Un underscore en tipo represta una const.
-		strcpy(tablaSimbolos[punteroTablaSimbolos].valor,"-");
+		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, nombre);
+		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].tipo, tipo); //agrego los datos. Un underscore en tipo represta una const.
+		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor,"-");
 	}else{
-		strcpy(tablaSimbolos[punteroTablaSimbolos].nombre,strcat(guion,nombre));
-		strcpy(tablaSimbolos[punteroTablaSimbolos].valor,nombre);
+		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre,strcat(guion,nombre));
+		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor,nombre);
 	}
 	
 	if(strcmp(tipo,"string") == 0 && !es_id){ //si es un string y no es un id (algo como "hello hello hello"), guardo su longitud en la tabla.
 		itoa(strlen(nombre),cad,10);
-		strcpy(tablaSimbolos[punteroTablaSimbolos].longitud,cad); 
+		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud,cad); 
 	}
-	punteroTablaSimbolos++; //incremento la variable global del puntero para señalizar que agregué un elemento a la lista
+	puntero_tabla_simbolos++; //incremento la variable global del puntero para señalizar que agregué un elemento a la lista
 }
 
-void guardarCte_TS(char* nombre, char* tipo){
+void guardar_cte_tabla_de_simbolos(char* nombre, char* tipo){
 	int i;
 	char cad[30];
 	char guion[30] = "_";
-	for(i = 0; i < punteroTablaSimbolos; i++){
-		if(strcmp(tablaSimbolos[i].nombre, nombre) == 0){ //verifico que el nombre del ID sea único
+	for(i = 0; i < puntero_tabla_simbolos; i++){
+		if(strcmp(tabla_simbolos_s[i].nombre, nombre) == 0){ //verifico que el nombre del ID sea único
 			printf("ID con nombre repetido. Error de compilación");
 			exit(1);
 		}
 	}
-	strcpy(tablaSimbolos[punteroTablaSimbolos].nombre, nombre);
-	strcpy(tablaSimbolos[punteroTablaSimbolos].tipo, tipo); //agrego los datos. Un underscore en tipo represta una const.
-	strcpy(tablaSimbolos[punteroTablaSimbolos].valor, valorConst);	
+	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, nombre);
+	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].tipo, tipo); //agrego los datos. Un underscore en tipo represta una const.
+	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor, valor_const);	
 	if(strcmp(tipo,"constString") == 0){ //si es un const string
 		itoa(strlen(nombre),cad,10);
-		strcpy(tablaSimbolos[punteroTablaSimbolos].longitud,cad); 
+		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud,cad); 
 	}
-	punteroTablaSimbolos++; //incremento la variable global del puntero para señalizar que agregué un elemento a la lista
+	puntero_tabla_simbolos++; //incremento la variable global del puntero para señalizar que agregué un elemento a la lista
 }
 
-void verificarExistencia(char* id){
+void verificar_existencia(char* id){
 	int i;
-	for(i = 0; i < punteroTablaSimbolos; i++){
-		if(strcmp(tablaSimbolos[i].nombre, id) == 0) //Si el id existe en mi tabla, salgo.
+	for(i = 0; i < puntero_tabla_simbolos; i++){
+		if(strcmp(tabla_simbolos_s[i].nombre, id) == 0) //Si el id existe en mi tabla, salgo.
 			return;
 	}
 	printf("ID no declarado. Error de compilación");
 	exit(1);
 }
 
-void escribirTS(){
+void escribir_tabla_de_simbolos(){
 	FILE *pf; 
 	int i;
 	pf = fopen("ts.txt","w"); 
@@ -321,8 +323,8 @@ void escribirTS(){
 	}
 
 	fprintf(pf, "Nombre\t\t\tTipo\t\t\tValor\t\t\tLongitud\n");
-	for (i = 0; i < punteroTablaSimbolos; i++)
-		fprintf(pf,"%s\t\t\t%s\t\t\t%s\t\t\t%s\n", tablaSimbolos[i].nombre,tablaSimbolos[i].tipo,tablaSimbolos[i].valor,tablaSimbolos[i].longitud);	
+	for (i = 0; i < puntero_tabla_simbolos; i++)
+		fprintf(pf,"%s\t\t\t%s\t\t\t%s\t\t\t%s\n", tabla_simbolos_s[i].nombre,tablaSimbolos[i].tipo,tablaSimbolos[i].valor,tablaSimbolos[i].longitud);	
 	
 	fclose(pf); 
 }
@@ -341,7 +343,6 @@ int main(int argc,char *argv[]){
 
 int yyerror(void){
 	printf("Syntax Error\n");
-	system ("Pause");
+	system("Pause");
 	exit (1);
 }
-
