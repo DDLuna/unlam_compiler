@@ -1,0 +1,10 @@
+var
+	[integer,integer] : [a,b]
+endvar
+
+if a==b{
+	a = a+1
+}else{
+	b = b+2
+}
+	
