@@ -1,0 +1,9 @@
+PROG	a	==	b	IF	a	=	a	+	1
+}else{
+	b = b+2
+}
+	
+	CUERPO_IF	b	=	b	+	2
+}
+	
+	
