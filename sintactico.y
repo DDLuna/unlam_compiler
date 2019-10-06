@@ -33,6 +33,7 @@ void escribir_tabla_de_simbolos(:);
 void guardar_cte_tabla_de_simbolos();
 arbol* crear_nodo(char* elemento, char* tipo, arbol *izq, arbol *der);
 arbol* crear_hoja(char* elemento, char* tipo);
+void recorrer_arbol_inorden(arbol* ast);
 
 /********VARIABLES*********/
 struct tabla_simbolos tabla_simbolos_s[1000];
@@ -254,6 +255,14 @@ arbol* crear_hoja(char* elemento, char* tipo) {
 	return crear_nodo(elemento, tipo, NULL, NULL);
 }
 
+void recorrer_arbol_inorden(arbol* ast) {
+	if (!ast) {
+		return
+	}
+	recorrer_arbol_inorden(ast->izq);
+	printf("%s", ast->nodo);
+	recorrer_arbol_inorden(ast->der);
+}
 void guardar_tabla_de_simbolos(char* nombre, char* tipo, int es_id){
 	int i;
 	char cad[10];
