@@ -1,5 +1,0 @@
-Nombre			Tipo			Valor			Longitud
-a			int			-			
-b			int			-			
-_1						1			
-_2						2			
