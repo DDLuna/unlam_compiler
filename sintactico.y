@@ -106,37 +106,41 @@ struct arbol *ast;
 /******SECCION DEFINICION DE REGLAS******/
 
 %%
-programaStart: programa {escribir_tabla_de_simbolos(); printf("Compilación exitosa\n");}
+programaStart: programa {escribir_tabla_de_simbolos(); printf("Compilación exitosa\n"); $$ = $1;}
 	;
 
-programa: inicioVariables  cuerpoPrograma
-	| cuerpoPrograma
-	| inicioVariables
+programa: inicioVariables  cuerpoPrograma { $$ = crear_nodo("PROG", NULL, $1, $2);}
+	| cuerpoPrograma { $$ = $1;}
+	| inicioVariables { $$ = $1;}
 	;
 
-inicioVariables: DEC_VAR declaracion FIN_DECVAR 
+inicioVariables: DEC_VAR declaracion FIN_DECVAR {$$ = $2;}
 	;
 
-cuerpoPrograma: cuerpoPrograma {printf ("\n");} sentencia 
-	| {printf ("\n");} sentencia
+cuerpoPrograma: cuerpoPrograma {printf ("\n");} sentencia { $$ = crear_nodo("CUERPO_PROG", NULL, $1, $2);}
+	| {printf ("\n");} sentencia { $$ = $1;}
 	;
 
-sentencia: asignacion
-	| iteracion
-	| seleccion
-	| PRINT CONST_STRING {guardar_tabla_de_simbolos($2, "string", !ES_ID); printf ("\t\tPrint %s",$2);}
-	| PRINT ID {printf ("\t\tPrint %s",$2);}
-	| READ ID {printf ("\t\tRead %s",$2);}
-	| declaracionConstante
+sentencia: asignacion { $$ = $1;}
+	| iteracion { $$ = $1;}
+	| seleccion { $$ = $1;}
+	| PRINT CONST_STRING {guardar_tabla_de_simbolos($2, "string", !ES_ID); printf ("\t\tPrint %s",$2);} //NO SE COMO PONERLO
+	| PRINT ID {printf ("\t\tPrint %s",$2);} //NO SE COMO PONERLO
+	| READ ID {printf ("\t\tRead %s",$2);} //NO SE COMO PONERLO
+	| declaracionConstante { $$ = $1;}
 	;
 
 
-declaracion: declaracion COR_A {printf ("\ttipos: ");} listaTipos COR_C DOS_PUNTOS COR_A {printf ("\n\tvariables: ");} listaVar COR_C 
-	| COR_A {printf ("\ttipos: ");} listaTipos COR_C DOS_PUNTOS COR_A {printf ("\n\tvariables: ");} listaVar COR_C
+declaracion: declaracion COR_A {printf ("\ttipos: ");} listaTipos COR_C DOS_PUNTOS COR_A {printf ("\n\tvariables: ");} listaVar COR_C {
+		$$ = crear_nodo("CUERPO_DECL", NULL, $1, crear_nodo(":", NULL, $3, $7));
+	}
+	| COR_A {printf ("\ttipos: ");} listaTipos COR_C DOS_PUNTOS COR_A {printf ("\n\tvariables: ");} listaVar COR_C {
+		$$ = crear_nodo(":", NULL, $2, $6);
+	}
 	;
 
-listaTipos: listaTipos COMA tipo
-	| tipo
+listaTipos: listaTipos COMA tipo {$$ = crear_nodo(",", NULL, $1, crear_hoja($3, NULL))}
+	| tipo {$$ = $1}
 	;
 
 tipo: ENTERO {
@@ -144,14 +148,16 @@ tipo: ENTERO {
 		contador_tipo_dato_escribir++;
 		contador_variables++;
 		printf ("Entero ");
+		$$ = crear_hoja($1, "int");
 	}
 	| FLOTANTE {
 		strcpy(vector_tipo_de_dato[contador_tipo_dato_escribir],"float");
 		contador_tipo_dato_escribir++;
 		contador_variables++;
 		printf("Flotante ");
+		$$ = crear_hoja($1, "float")
 	}
-	;
+	; // no se que poner aca como hoja, fijensen si esta bien
 
 listaVar: listaVar COMA ID {
 		if(contador_variables > 0) {
@@ -160,6 +166,7 @@ listaVar: listaVar COMA ID {
 			contador_variables--;
 		}
 		printf ("%s ",$3);
+		$$ = crear_nodo(",", NULL, $1, crear_hoja($3, NULL));
 	}
 	| ID {
 		if(contador_variables > 0) {
@@ -168,56 +175,49 @@ listaVar: listaVar COMA ID {
 			contador_variables--;
 		}
 		printf("%s ",$1);
+		$$ = crear_hoja($1, NULL);
 	}
 	;
 
-declaracionConstante: CONSTANTE ID OP_ASIG {
-		printf("\tDeclaraste una constante de tipo");
-	} tipoCte {
-		guardar_cte_tabla_de_simbolos($2,tipo_dato);
-	}
+declaracionConstante: CONSTANTE ID OP_ASIG { printf("\tDeclaraste una constante de tipo");} tipoCte {$$ = crear_nodo("=", NULL, crear_hoja($2, NULL), $4); guardar_cte_tabla_de_simbolos($2,tipo_dato);}
+	; // No inclui el termino "CONSTANTE" al arbol, se deberia agregar?
+
+tipoCte: CONST_STRING {tipo_dato = "constString"; strcpy(valor_const, $1); printf ("String"); $$ = crear_hoja($1, "string");} //si queremos que guarde por separado la cte, agregar guardar_tabla_de_simbolos($1,tipo_dato, !ES_ID
+	| CONST_ENT {tipo_dato = "constInt"; itoa($1, valor_const, 10); printf("Entera"); $$ = crear_hoja($1, "int");}
+	| CONST_REAL {tipo_dato = "constFloat"; ftoa($1, valor_const, 10); printf("Flotante"); $$ = crear_hoja($1, "float");}
 	;
 
-tipoCte: CONST_STRING {
-		tipo_dato = "constString";
-		strcpy(valor_const, $1);
-		printf ("String");
-	} //si queremos que guarde por separado la cte, agregar guardar_tabla_de_simbolos($1,tipo_dato, !ES_ID
-	| CONST_ENT {tipo_dato = "constInt"; itoa($1, valor_const, 10); printf("Entera");}
-	| CONST_REAL {tipo_dato = "constFloat"; ftoa($1, valor_const, 10); printf("Flotante");}
+asignacion: ID {verificar_existencia($1);} OP_ASIG {printf ("\tAsignaste ");} expresion {printf (" a '%s'",$1); $$ = crear_nodo("=", NULL, crear_hoja($1, NULL), $3);} 
 	;
 
-asignacion: ID {verificar_existencia($1);} OP_ASIG {printf ("\tAsignaste ");} expresion {printf (" a '%s'",$1);} 
+seleccion:  IF condicion LLAVE_A cuerpoPrograma LLAVE_C {printf ("\n\tElse ");} ELSE LLAVE_A cuerpoPrograma LLAVE_C {printf ("\n"); $$ = crear_nodo("IF", NULL, $2, crear_nodo("CUERPO_IF", $4, $8));} //El ELSE ira?
+	| IF condicion LLAVE_A cuerpoPrograma LLAVE_C {printf ("\n"); $$ = crear_nodo("IF", NULL, $2, $4);}
+	| IF condicion {printf ("\n\t");} sentencia {printf ("\n"); $$ = crear_nodo("IF", NULL, $2, $3);} 
 	;
 
-seleccion:  IF condicion LLAVE_A cuerpoPrograma LLAVE_C {printf ("\n\tElse ");} ELSE LLAVE_A cuerpoPrograma LLAVE_C {printf ("\n");}
-	| IF condicion LLAVE_A cuerpoPrograma LLAVE_C {printf ("\n");}
-	| IF condicion {printf ("\n\t");} sentencia {printf ("\n");} 
-	;
-
-iteracion: REPEAT condicion LLAVE_A cuerpoPrograma LLAVE_C {printf ("\n");}
+iteracion: REPEAT condicion LLAVE_A cuerpoPrograma LLAVE_C {printf ("\n"); $$ = crear_nodo("REPEAT", NULL, $2, $4);}
    ;
 
 condicion: comparacion
-	| comparacion {printf ("And\n");} AND comparacion
-	| comparacion {printf ("Or\n");} OR comparacion 
+	| comparacion {printf ("And\n");} AND comparacion {$$ = crear_nodo("AND", NULL, $1, $3);}
+	| comparacion {printf ("Or\n");} OR comparacion {$$ = crear_nodo("OR", NULL, $1, $3);}
+	| OP_NEG {printf ("Negado");} PAR_A comparacion PAR_C {$$ = crear_nodo("!", NULL, $3, NULL);} //Se ignoran los parentesis?
 	;
 
-comparacion: expresion comparador expresion
-	| OP_NEG {printf ("Negado");} PAR_A expresion comparador expresion PAR_C
+comparacion: expresion comparador expresion {$$ = crear_nodo($2, NULL, $1, $3);}
 	;
 
-comparador: OP_COMP {printf (" Igual ");}
-	| OP_MAYOR {printf (" Mayor ");}
-	| OP_MENOR {printf (" Menor ");}
-	| OP_MAYIG {printf (" Mayor O Igual ");}
-	| OP_MENIG {printf (" Menor O Igual ");}
-	| OP_DIST {printf (" Distinto ");}
+comparador: OP_COMP {printf (" Igual "); $$ = "==";}
+	| OP_MAYOR {printf (" Mayor "); $$ = ">";}
+	| OP_MENOR {printf (" Menor "); $$ = "<";}
+	| OP_MAYIG {printf (" Mayor O Igual "); $$ = ">=";}
+	| OP_MENIG {printf (" Menor O Igual "); $$ = "<=";}
+	| OP_DIST {printf (" Distinto "); $$ = "!=";}
 	;
 
 expresion: expresion OP_SUMA termino {$$ = crear_nodo("+", NULL, $1, $3);}
 	| expresion OP_RESTA termino {$$ = crear_nodo("-", NULL, $1, $3);}
-	| termino
+	| termino{$$ = $1;}
 	;
 
 termino: termino OP_MULT factor {$$ = crear_nodo("*", NULL, $1, $3);}
@@ -228,8 +228,8 @@ termino: termino OP_MULT factor {$$ = crear_nodo("*", NULL, $1, $3);}
 	;
 
 factor: PAR_A expresion PAR_C {$$ = $2;}
-	| ID {printf("'%s'",$1); $$ = crear_hoja($1);}		// no deberia guardar $$ en la TS?
-	| CONST_ENT {guardar_tabla_de_simbolos($1,"int", !ES_ID); printf ("'%s'",$1); $$ = crear_hoja($1, "real");}
+	| ID {printf("'%s'",$1); $$ = crear_hoja($1, NULL);}		// no deberia guardar $$ en la TS?
+	| CONST_ENT {guardar_tabla_de_simbolos($1,"int", !ES_ID); printf ("'%s'",$1); $$ = crear_hoja($1, "int");}
 	| CONST_REAL {guardar_tabla_de_simbolos($1,"float", !ES_ID); printf ("'%s'",$1); $$ = crear_hoja($1, "real");}
 	;				  
 
@@ -237,7 +237,7 @@ factor: PAR_A expresion PAR_C {$$ = $2;}
 
 /******SECCION CODIGO******/
 
-arbol* crear_nodo(char* elemento, char* tipo, arbol *der) {
+arbol* crear_nodo(char* elemento, char* tipo, arbol *izq, arbol *der) {
 	arbol *a = malloc(sizeof(arbol));
 	if (!a) {
 		yyerror("No hay memoria");
