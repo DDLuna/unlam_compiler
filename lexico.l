@@ -72,8 +72,8 @@ COMENTARIO		"--/"(.*|\n|\r)"/--"
 "."         { return PUNTO; }
 ":"         { return DOS_PUNTOS; }
 {ID}            { yylval.id=strdup(yytext); return ID; }
-{CONST_ENT}		{ verificarRangoEnt(); yylval.num=yytext; return CONST_ENT; }
-{CONST_REAL}	{ verificarRangoReal(); yylval.real=yytext; return CONST_REAL; }
+{CONST_ENT}		{ verificarRangoEnt(); yylval.num=strdup(yytext); return CONST_ENT; }
+{CONST_REAL}	{ verificarRangoReal(); yylval.real=strdup(yytext); return CONST_REAL; }
 {CONST_STRING}	{ verificarTamanioString(); yylval.string=strdup(yytext); return CONST_STRING; }
 {COMENTARIO}	{verificarNivelComentario(); }
 

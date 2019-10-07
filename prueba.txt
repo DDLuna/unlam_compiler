@@ -43,9 +43,5 @@ a = b + 3 * ( 5 div 5)
 if !( a <> 4 )
 	print c	
 
---/jojo/--
-
---/holi --/hole /-- hols/--
-
 
 

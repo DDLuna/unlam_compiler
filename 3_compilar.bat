@@ -1,3 +1,3 @@
-Segunda.exe pruebaArbol.txt
+Segunda.exe prueba.txt
 
 pause
