@@ -1,10 +1,10 @@
 var
-	[integer,integer] : [a,b]
+	[integer,float,integer] : [a,b,k]
+	[integer, float] : [j, l]
 endvar
 
-if a==b{
-	a = a+1
-}else{
-	b = b+2
+if !(a == b) {
+print "lala" }
+else {
+print b
 }
-	
