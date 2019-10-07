@@ -292,8 +292,7 @@ void recorrer_arbol_inorden(FILE * pfi, arbol* ast) {
 	recorrer_arbol_inorden(pfi, ast->der);
 }
 
-// Function to print binary tree in 2D 
-// It does reverse inorder traversal 
+// Funcion para printear el arbol en 2d inorden. NO TOCAR. 
 void print2DUtil(struct arbol *raiz, int espacio) 
 { 
     // Caso base
