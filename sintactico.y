@@ -9,6 +9,9 @@
 FILE  *yyin;
 #define ES_ID 1
 #define NO_ENCONTRADO -1
+#define STRING 10
+#define INT 20
+#define FLOAT 30
 
 //Structs
 	//TS
@@ -36,6 +39,10 @@ arbol* crear_hoja(char* elemento, char* tipo);
 void recorrer_arbol_inorden(FILE * pfi, arbol* ast);
 void print2DUtil(struct arbol *raiz, int espacio); 
 void print2D(struct arbol *raiz); 
+char* calcular_resultante(char*, char*);
+char* obtener_tipo_arbol(arbol* id);
+char* obtener_tipo(char* id);
+
 
 /********VARIABLES*********/
 struct tabla_simbolos tabla_simbolos_s[1000];
@@ -45,6 +52,7 @@ char vector_tipo_de_dato[1000][10];
 int contador_tipo_dato_escribir = 0;
 int contador_tipo_dato_leer = 0;
 char valor_const[31];
+char* tipo_cte[10];
 
 int contador_variables = 0;
 
@@ -146,10 +154,10 @@ sentencia: asignacion { $$ = $1;}
 	| seleccion { $$ = $1;}
 	| PRINT CONST_STRING {
 		guardar_tabla_de_simbolos($2, "string", !ES_ID); 
-		$$ = crear_nodo("PRINT",NULL,NULL,crear_hoja($2,NULL));
+		$$ = crear_nodo("PRINT","string",NULL,crear_hoja($2,NULL));
 		}
-	| PRINT ID {$$ = crear_nodo("PRINT",NULL,NULL,crear_hoja($2,NULL));}
-	| READ ID {$$ = crear_nodo("READ",NULL,NULL,crear_hoja($2,NULL));}
+	| PRINT ID {$$ = crear_nodo("PRINT",obtener_tipo($2),NULL,crear_hoja($2,NULL));}
+	| READ ID {$$ = crear_nodo("READ",obtener_tipo($2),NULL,crear_hoja($2,NULL));}
 	| declaracionConstante
 	;
 
@@ -191,8 +199,8 @@ listaVar: listaVar COMA ID {
 	;
 
 declaracionConstante: CONSTANTE ID OP_ASIG tipoCte {
-		$$ = crear_nodo("=", NULL, crear_hoja($2, NULL), $4);  	
 		guardar_cte_tabla_de_simbolos($2,tipo_dato, valor_const);
+		$$ = crear_nodo("=", obtener_tipo($2), crear_hoja($2, obtener_tipo($2)), $4);  	
 		}
 	; 
 
@@ -213,12 +221,12 @@ tipoCte: CONST_STRING {
 		}
 	;
 
-asignacion: ID OP_ASIG expresion {verificar_existencia($1); $$ = crear_nodo("=", NULL, crear_hoja($1, NULL), $3);} 
+asignacion: ID OP_ASIG expresion {verificar_existencia($1); $$ = crear_nodo("=", obtener_tipo($1), crear_hoja($1, obtener_tipo($1)), $3);} 
 	;
 
 seleccion:  IF condicion LLAVE_A cuerpoPrograma LLAVE_C ELSE LLAVE_A cuerpoPrograma LLAVE_C {
 			$$ = crear_nodo("IF", NULL, $2, crear_nodo("CUERPO_IF",NULL,$4,$8));
-			} //El ELSE ira?
+			}
 	| IF condicion LLAVE_A cuerpoPrograma LLAVE_C { $$ = crear_nodo("IF", NULL, $2, $4);}
 	| IF condicion sentencia { $$ = crear_nodo("IF", NULL, $2, $3);} 
 	;
@@ -232,7 +240,7 @@ condicion: comparacion
 	| OP_NEG PAR_A comparacion PAR_C {$$ = crear_nodo("!", NULL, $3, NULL);} 
  	;
 
-comparacion: expresion comparador expresion {$$ = crear_nodo($2, NULL, $1, $3);}
+comparacion: expresion comparador expresion {$$ = crear_nodo($2, calcular_resultante(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
 	;
 
 comparador: OP_COMP {$$ = "==";}
@@ -243,27 +251,57 @@ comparador: OP_COMP {$$ = "==";}
 	| OP_DIST {$$ = "!=";}
 	;
 
-expresion: expresion OP_SUMA termino {$$ = crear_nodo("+", NULL, $1, $3);}
-	| expresion OP_RESTA termino {$$ = crear_nodo("-", NULL, $1, $3);}
+expresion: expresion OP_SUMA termino {$$ = crear_nodo("+", calcular_resultante(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
+	| expresion OP_RESTA termino {$$ = crear_nodo("-", calcular_resultante(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
 	| termino {$$ = $1;}
 	;
 
-termino: termino OP_MULT factor {$$ = crear_nodo("*", NULL, $1, $3);}
-	| termino OP_DIV factor {$$ = crear_nodo("/", NULL, $1, $3);}
-	| termino DIV_ENT factor {$$ = crear_nodo("DIV", NULL, $1, $3);}
-	| termino MODULO factor {$$ = crear_nodo("-", NULL, $1, crear_nodo("*", NULL, $3, crear_nodo("/", NULL, $1, $3)));}
+termino: termino OP_MULT factor {$$ = crear_nodo("*", calcular_resultante(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
+	| termino OP_DIV factor {$$ = crear_nodo("/", calcular_resultante(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
+	| termino DIV_ENT factor {$$ = crear_nodo("DIV", calcular_resultante(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
+	| termino MODULO factor {$$ = crear_nodo("-", calcular_resultante(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, crear_nodo("*", calcular_resultante(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $3, crear_nodo("/", calcular_resultante(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3)));} //perdon
 	| factor {$$ = $1;}
 	;
 
 factor: PAR_A expresion PAR_C {$$ = $2;}
-	| ID  {$$ = crear_hoja($1, NULL);}		
+	| ID  {$$ = crear_hoja($1, obtener_tipo($1));}		
 	| CONST_ENT {guardar_tabla_de_simbolos($1,"int", !ES_ID); $$ = crear_hoja($1, "int");}
-	| CONST_REAL {guardar_tabla_de_simbolos($1,"float", !ES_ID); $$ = crear_hoja($1, "real");}
+	| CONST_REAL {guardar_tabla_de_simbolos($1,"float", !ES_ID); $$ = crear_hoja($1, "float");}
 	;				  
 
 %%
 
 /******SECCION CODIGO******/
+
+/*
+* Dado un id, retorna su tipo
+*/
+char* obtener_tipo_arbol(arbol* id){
+	return id->tipo;
+}
+
+char* obtener_tipo(char* id){
+	int i = 0;
+	for(i; i < puntero_tabla_simbolos; i++){
+		if(strcmp(id, tabla_simbolos_s[i].nombre) == 0){
+			if(strcasecmp(tabla_simbolos_s[i].tipo, "int") == 0|| strcasecmp(tabla_simbolos_s[i].tipo, "constInt") == 0){
+				return "int";
+			}
+			return (strcasecmp(tabla_simbolos_s[i].tipo, "float") == 0 || strcasecmp(tabla_simbolos_s[i].tipo, "constFloat") == 0) ? "float" : "string";
+		}
+	}
+	printf("Error, id no hallado");
+	exit(1);
+}
+
+/*
+* Dado dos tipos de dato, retorna el resultante 
+* int, int -> int, float, float -> float, int, float -> float
+*/
+char* calcular_resultante(char* a, char* b){
+	return strcmp(a, "float") == 0 ? a : b;
+}
+
 
 arbol* crear_nodo(char* elemento, char* tipo, arbol *izq, arbol *der) {
 	arbol *a = malloc(sizeof(arbol));
@@ -310,7 +348,7 @@ void print2DUtil(struct arbol *raiz, int espacio)
 	int i;
     for (i = 10; i < espacio; i++) 
         printf(" "); 
-    printf("%s\n", raiz->nodo); 
+    printf("%s %s\n", raiz->nodo, raiz->tipo); 
   
     // Procede al hijo izquierdo
     print2DUtil(raiz->izq, espacio); 
