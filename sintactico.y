@@ -44,12 +44,11 @@ const char* obtener_tipo(char* id);
 /********VARIABLES*********/
 struct tabla_simbolos tabla_simbolos_s[1000];
 int puntero_tabla_simbolos = 0;
-char tipo_dato[20];
+const char* tipo_dato;
 char vector_tipo_de_dato[1000][10];
 int contador_tipo_dato_escribir = 0;
 int contador_tipo_dato_leer = 0;
-char valor_const[31];
-char* tipo_cte[10];
+const char* valor_const;
 int contador_variables = 0;
 arbol* a;
 
@@ -208,18 +207,18 @@ declaracionConstante: CONSTANTE ID OP_ASIG tipoCte {
 	; 
 
 tipoCte: CONST_STRING {
-		strcpy(tipo_dato, CONSTSTRING);
-		strcpy(valor_const, $1);  
+		tipo_dato = CONSTSTRING;
+		valor_const = $1; 
 		$$ = crear_hoja($1, STRING);
 		}
 	| CONST_ENT {
-		strcpy(tipo_dato, CONSTINT); 
-		strcpy(valor_const, $1);  
+		tipo_dato = CONSTINT;
+		valor_const = $1;   
 		$$ = crear_hoja($1, INT);
 		}
 	| CONST_REAL {
-		strcpy(tipo_dato, CONSTFLOAT); 
-		strcpy(valor_const, $1); 
+		tipo_dato = CONSTFLOAT;
+		valor_const = $1; 
 		$$ = crear_hoja($1, FLOAT);
 		}
 	;
