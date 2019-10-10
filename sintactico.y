@@ -405,7 +405,7 @@ void guardar_cte_tabla_de_simbolos(char* nombre, char* tipo, char* valor_const){
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, nombre);
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].tipo, tipo); //agrego los datos. 
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor, valor_const);	
-	if(strcmp(tipo, CONSTFLOAT) == 0){ //si es un const string
+	if(strcmp(tipo, CONSTSTRING) == 0){ //si es un const string
 		itoa(strlen(nombre),cad,10);
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, cad); 
 	}
