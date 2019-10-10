@@ -9,9 +9,12 @@
 FILE  *yyin;
 #define ES_ID 1
 #define NO_ENCONTRADO -1
-#define STRING 10
-#define INT 20
-#define FLOAT 30
+#define STRING "string"
+#define INT "int"
+#define FLOAT "float"
+#define CONSTINT "constInt"
+#define CONSTFLOAT "constFloat"
+#define CONSTSTRING "constString"
 
 //Structs
 	//TS
@@ -153,8 +156,8 @@ sentencia: asignacion { $$ = $1;}
 	| iteracion { $$ = $1;}
 	| seleccion { $$ = $1;}
 	| PRINT CONST_STRING {
-		guardar_tabla_de_simbolos($2, "string", !ES_ID); 
-		$$ = crear_nodo("PRINT","string",NULL,crear_hoja($2,NULL));
+		guardar_tabla_de_simbolos($2, STRING, !ES_ID); 
+		$$ = crear_nodo("PRINT", STRING,NULL,crear_hoja($2,NULL));
 		}
 	| PRINT ID {$$ = crear_nodo("PRINT",obtener_tipo($2),NULL,crear_hoja($2,NULL));}
 	| READ ID {$$ = crear_nodo("READ",obtener_tipo($2),NULL,crear_hoja($2,NULL));}
@@ -171,12 +174,12 @@ listaTipos: listaTipos COMA tipo
 	;
 
 tipo: ENTERO {
-		strcpy(vector_tipo_de_dato[contador_tipo_dato_escribir],"int");
+		strcpy(vector_tipo_de_dato[contador_tipo_dato_escribir],INT);
 		contador_tipo_dato_escribir++;
 		contador_variables++;
 	}
 	| FLOTANTE {
-		strcpy(vector_tipo_de_dato[contador_tipo_dato_escribir],"float");
+		strcpy(vector_tipo_de_dato[contador_tipo_dato_escribir],FLOAT);
 		contador_tipo_dato_escribir++;
 		contador_variables++;
 	}
@@ -205,19 +208,19 @@ declaracionConstante: CONSTANTE ID OP_ASIG tipoCte {
 	; 
 
 tipoCte: CONST_STRING {
-		tipo_dato = "constString";
+		tipo_dato = CONSTFLOAT;
 		strcpy(valor_const, $1);  
-		$$ = crear_hoja($1, "string");
+		$$ = crear_hoja($1, STRING);
 		} //si queremos que guarde por separado la cte, agregar guardar_tabla_de_simbolos($1,tipo_dato, !ES_ID
 	| CONST_ENT {
-		tipo_dato = "constInt"; 
+		tipo_dato = CONSTINT; 
 		strcpy(valor_const, $1);  
-		$$ = crear_hoja($1, "int");
+		$$ = crear_hoja($1, INT);
 		}
 	| CONST_REAL {
-		tipo_dato = "constFloat"; 
+		tipo_dato = CONSTFLOAT; 
 		strcpy(valor_const, $1);  ////antes aca estaba ftoa($1, valor_const, 10); pero al compi no le gustaba :C
-		$$ = crear_hoja($1, "float");
+		$$ = crear_hoja($1, FLOAT);
 		}
 	;
 
@@ -265,8 +268,8 @@ termino: termino OP_MULT factor {$$ = crear_nodo("*", calcular_resultante(obtene
 
 factor: PAR_A expresion PAR_C {$$ = $2;}
 	| ID  {$$ = crear_hoja($1, obtener_tipo($1));}		
-	| CONST_ENT {guardar_tabla_de_simbolos($1,"int", !ES_ID); $$ = crear_hoja($1, "int");}
-	| CONST_REAL {guardar_tabla_de_simbolos($1,"float", !ES_ID); $$ = crear_hoja($1, "float");}
+	| CONST_ENT {guardar_tabla_de_simbolos($1,INT, !ES_ID); $$ = crear_hoja($1, INT);}
+	| CONST_REAL {guardar_tabla_de_simbolos($1,FLOAT, !ES_ID); $$ = crear_hoja($1, FLOAT);}
 	;				  
 
 %%
@@ -277,17 +280,19 @@ factor: PAR_A expresion PAR_C {$$ = $2;}
 * Dado un id, retorna su tipo
 */
 char* obtener_tipo_arbol(arbol* id){
-	return id->tipo;
+	if(!*id){ 
+		return id->tipo;	
+	}
 }
 
 char* obtener_tipo(char* id){
 	int i = 0;
 	for(i; i < puntero_tabla_simbolos; i++){
 		if(strcmp(id, tabla_simbolos_s[i].nombre) == 0){
-			if(strcasecmp(tabla_simbolos_s[i].tipo, "int") == 0|| strcasecmp(tabla_simbolos_s[i].tipo, "constInt") == 0){
-				return "int";
+			if(strcasecmp(tabla_simbolos_s[i].tipo, INT) == 0|| strcasecmp(tabla_simbolos_s[i].tipo, CONSTINT) == 0){
+				return INT;
 			}
-			return (strcasecmp(tabla_simbolos_s[i].tipo, "float") == 0 || strcasecmp(tabla_simbolos_s[i].tipo, "constFloat") == 0) ? "float" : "string";
+			return (strcasecmp(tabla_simbolos_s[i].tipo, FLOAT) == 0 || strcasecmp(tabla_simbolos_s[i].tipo, CONSTFLOAT) == 0) ? FLOAT : STRING;
 		}
 	}
 	printf("Error, id no hallado");
@@ -299,7 +304,7 @@ char* obtener_tipo(char* id){
 * int, int -> int, float, float -> float, int, float -> float
 */
 char* calcular_resultante(char* a, char* b){
-	return strcmp(a, "float") == 0 ? a : b;
+	return strcmp(a, FLOAT) == 0 ? a : b;
 }
 
 
@@ -380,7 +385,7 @@ void guardar_tabla_de_simbolos(char* nombre, char* tipo, int es_id){
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor,nombre);
 	}
 	
-	if(strcmp(tipo,"string") == 0 && !es_id){ //si es un string y no es un id (algo como "hello hello hello"), guardo su longitud en la tabla.
+	if(strcmp(tipo,STRING) == 0 && !es_id){ //si es un string y no es un id (algo como "hello hello hello"), guardo su longitud en la tabla.
 		itoa(strlen(nombre)-2,cad,10);
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud,cad); 
 	}
@@ -400,7 +405,7 @@ void guardar_cte_tabla_de_simbolos(char* nombre, char* tipo, char* valor_const){
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, nombre);
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].tipo, tipo); //agrego los datos. 
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor, valor_const);	
-	if(strcmp(tipo,"constString") == 0){ //si es un const string
+	if(strcmp(tipo,CONSTFLOAT) == 0){ //si es un const string
 		itoa(strlen(nombre),cad,10);
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud,cad); 
 	}
