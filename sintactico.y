@@ -9,12 +9,6 @@
 FILE  *yyin;
 #define ES_ID 1
 #define NO_ENCONTRADO -1
-#define STRING "string"
-#define INT "int"
-#define FLOAT "float"
-#define CONSTINT "constInt"
-#define CONSTFLOAT "constFloat"
-#define CONSTSTRING "constString"
 
 //Structs
 	//TS
@@ -27,7 +21,7 @@ struct tabla_simbolos{
 
 typedef struct arbol{
 	char* nodo;
-	char* tipo;
+	const char* tipo;
 	struct arbol *izq;
 	struct arbol *der;
 }arbol;
@@ -37,29 +31,35 @@ void guardar_tabla_de_simbolos();
 void verificar_existencia();
 void escribir_tabla_de_simbolos();
 void guardar_cte_tabla_de_simbolos();
-arbol* crear_nodo(char* elemento, char* tipo, arbol *izq, arbol *der);
-arbol* crear_hoja(char* elemento, char* tipo);
+arbol* crear_nodo(char* elemento, const char* tipo, arbol *izq, arbol *der);
+arbol* crear_hoja(char* elemento, const char* tipo);
 void recorrer_arbol_inorden(FILE * pfi, arbol* ast);
 void print2DUtil(struct arbol *raiz, int espacio); 
 void print2D(struct arbol *raiz); 
-char* calcular_resultante(char*, char*);
-char* obtener_tipo_arbol(arbol* id);
-char* obtener_tipo(char* id);
+const char* calcular_resultante(const char*, const char*);
+const char* obtener_tipo_arbol(arbol* id);
+const char* obtener_tipo(char* id);
 
 
 /********VARIABLES*********/
 struct tabla_simbolos tabla_simbolos_s[1000];
 int puntero_tabla_simbolos = 0;
-char* tipo_dato;
+char tipo_dato[20];
 char vector_tipo_de_dato[1000][10];
 int contador_tipo_dato_escribir = 0;
 int contador_tipo_dato_leer = 0;
 char valor_const[31];
 char* tipo_cte[10];
-
 int contador_variables = 0;
-
 arbol* a;
+
+/********CONSTANTES*******/
+const char* STRING = "string";
+const char* INT = "int";
+const char* FLOAT = "float";
+const char* CONSTINT = "constInt";
+const char* CONSTFLOAT = "constFloat";
+const char* CONSTSTRING = "constString";
 
 %}
 
@@ -137,18 +137,18 @@ char* op_log;
 /******SECCION DEFINICION DE REGLAS******/
 
 %%
-programaStart: programa {escribir_tabla_de_simbolos(); printf("Compilación exitosa\n"); $$ = $1; a=$$;}
+programaStart: programa {escribir_tabla_de_simbolos(); printf("Compilación exitosa\n"); $$ = $1; a = $$;}
 	;
 
-programa: inicioVariables  cuerpoPrograma {$$ = crear_nodo("PROG", NULL, NULL, $2);}
-	| cuerpoPrograma { $$ = $1;}
+programa: inicioVariables cuerpoPrograma {$$ = crear_nodo("PROG", NULL, NULL, $2);}
+	| cuerpoPrograma {$$ = $1;}
 	| inicioVariables
 	;
 
 inicioVariables: DEC_VAR declaracion FIN_DECVAR
 	;
 
-cuerpoPrograma: cuerpoPrograma sentencia { $$ = crear_nodo("CUERPO_PROG", NULL, $1, $2);}
+cuerpoPrograma: cuerpoPrograma sentencia {$$ = crear_nodo("CUERPO_PROG", NULL, $1, $2);}
 	| sentencia {$$ = $1;}
 	;
 
@@ -157,10 +157,10 @@ sentencia: asignacion { $$ = $1;}
 	| seleccion { $$ = $1;}
 	| PRINT CONST_STRING {
 		guardar_tabla_de_simbolos($2, STRING, !ES_ID); 
-		$$ = crear_nodo("PRINT", STRING,NULL,crear_hoja($2,NULL));
+		$$ = crear_nodo("PRINT", STRING, NULL, crear_hoja($2, NULL));
 		}
-	| PRINT ID {$$ = crear_nodo("PRINT",obtener_tipo($2),NULL,crear_hoja($2,NULL));}
-	| READ ID {$$ = crear_nodo("READ",obtener_tipo($2),NULL,crear_hoja($2,NULL));}
+	| PRINT ID {$$ = crear_nodo("PRINT", obtener_tipo($2), NULL, crear_hoja($2, NULL));}
+	| READ ID {$$ = crear_nodo("READ", obtener_tipo($2), NULL, crear_hoja($2, NULL));}
 	| declaracionConstante
 	;
 
@@ -174,7 +174,7 @@ listaTipos: listaTipos COMA tipo
 	;
 
 tipo: ENTERO {
-		strcpy(vector_tipo_de_dato[contador_tipo_dato_escribir],INT);
+		strcpy(vector_tipo_de_dato[contador_tipo_dato_escribir], INT);
 		contador_tipo_dato_escribir++;
 		contador_variables++;
 	}
@@ -187,14 +187,14 @@ tipo: ENTERO {
 
 listaVar: listaVar COMA ID {
 		if(contador_variables > 0) {
-			guardar_tabla_de_simbolos($3,vector_tipo_de_dato[contador_tipo_dato_leer], ES_ID);
+			guardar_tabla_de_simbolos($3, vector_tipo_de_dato[contador_tipo_dato_leer], ES_ID);
 			contador_tipo_dato_leer++;
 			contador_variables--;
 		}
 	}
 	| ID {
 		if(contador_variables > 0) {
-			guardar_tabla_de_simbolos($1,vector_tipo_de_dato[contador_tipo_dato_leer], ES_ID);
+			guardar_tabla_de_simbolos($1, vector_tipo_de_dato[contador_tipo_dato_leer], ES_ID);
 			contador_tipo_dato_leer++;
 			contador_variables--;
 		}
@@ -202,36 +202,38 @@ listaVar: listaVar COMA ID {
 	;
 
 declaracionConstante: CONSTANTE ID OP_ASIG tipoCte {
-		guardar_cte_tabla_de_simbolos($2,tipo_dato, valor_const);
+		guardar_cte_tabla_de_simbolos($2, tipo_dato, valor_const);
 		$$ = crear_nodo("=", obtener_tipo($2), crear_hoja($2, obtener_tipo($2)), $4);  	
 		}
 	; 
 
 tipoCte: CONST_STRING {
-		tipo_dato = CONSTFLOAT;
+		strcpy(tipo_dato, CONSTSTRING);
 		strcpy(valor_const, $1);  
 		$$ = crear_hoja($1, STRING);
-		} //si queremos que guarde por separado la cte, agregar guardar_tabla_de_simbolos($1,tipo_dato, !ES_ID
+		}
 	| CONST_ENT {
-		tipo_dato = CONSTINT; 
+		strcpy(tipo_dato, CONSTINT); 
 		strcpy(valor_const, $1);  
 		$$ = crear_hoja($1, INT);
 		}
 	| CONST_REAL {
-		tipo_dato = CONSTFLOAT; 
-		strcpy(valor_const, $1);  ////antes aca estaba ftoa($1, valor_const, 10); pero al compi no le gustaba :C
+		strcpy(tipo_dato, CONSTFLOAT); 
+		strcpy(valor_const, $1); 
 		$$ = crear_hoja($1, FLOAT);
 		}
 	;
 
-asignacion: ID OP_ASIG expresion {verificar_existencia($1); $$ = crear_nodo("=", obtener_tipo($1), crear_hoja($1, obtener_tipo($1)), $3);} 
+asignacion: ID OP_ASIG expresion {
+		verificar_existencia($1);
+		$$ = crear_nodo("=", obtener_tipo($1), crear_hoja($1, obtener_tipo($1)), $3);} 
 	;
 
 seleccion:  IF condicion LLAVE_A cuerpoPrograma LLAVE_C ELSE LLAVE_A cuerpoPrograma LLAVE_C {
-			$$ = crear_nodo("IF", NULL, $2, crear_nodo("CUERPO_IF",NULL,$4,$8));
+			$$ = crear_nodo("IF", NULL, $2, crear_nodo("CUERPO_IF", NULL, $4, $8));
 			}
-	| IF condicion LLAVE_A cuerpoPrograma LLAVE_C { $$ = crear_nodo("IF", NULL, $2, $4);}
-	| IF condicion sentencia { $$ = crear_nodo("IF", NULL, $2, $3);} 
+	| IF condicion LLAVE_A cuerpoPrograma LLAVE_C {$$ = crear_nodo("IF", NULL, $2, $4);}
+	| IF condicion sentencia {$$ = crear_nodo("IF", NULL, $2, $3);} 
 	;
 
 iteracion: REPEAT condicion LLAVE_A cuerpoPrograma LLAVE_C {$$ = crear_nodo("REPEAT", NULL, $2, $4);}
@@ -279,15 +281,15 @@ factor: PAR_A expresion PAR_C {$$ = $2;}
 /*
 * Dado un id, retorna su tipo
 */
-char* obtener_tipo_arbol(arbol* id){
-	if(!*id){ 
+const char* obtener_tipo_arbol(arbol* id){
+	if(id){ 
 		return id->tipo;	
 	}
 }
 
-char* obtener_tipo(char* id){
-	int i = 0;
-	for(i; i < puntero_tabla_simbolos; i++){
+const char* obtener_tipo(char* id){
+	int i;
+	for(i = 0; i < puntero_tabla_simbolos; i++){
 		if(strcmp(id, tabla_simbolos_s[i].nombre) == 0){
 			if(strcasecmp(tabla_simbolos_s[i].tipo, INT) == 0|| strcasecmp(tabla_simbolos_s[i].tipo, CONSTINT) == 0){
 				return INT;
@@ -303,12 +305,12 @@ char* obtener_tipo(char* id){
 * Dado dos tipos de dato, retorna el resultante 
 * int, int -> int, float, float -> float, int, float -> float
 */
-char* calcular_resultante(char* a, char* b){
+const char* calcular_resultante(const char* a, const char* b){
 	return strcmp(a, FLOAT) == 0 ? a : b;
 }
 
 
-arbol* crear_nodo(char* elemento, char* tipo, arbol *izq, arbol *der) {
+arbol* crear_nodo(char* elemento, const char* tipo, arbol *izq, arbol *der) {
 	arbol *a = malloc(sizeof(arbol));
 	if (!a) {
 		yyerror("No hay memoria");
@@ -321,16 +323,15 @@ arbol* crear_nodo(char* elemento, char* tipo, arbol *izq, arbol *der) {
 	return a;
 }
 
-arbol* crear_hoja(char* elemento, char* tipo) {
+arbol* crear_hoja(char* elemento, const char* tipo) {
 	return crear_nodo(elemento, tipo, NULL, NULL);
 }
 
 void recorrer_arbol_inorden(FILE * pfi, arbol* ast) {
 	if (!ast)
 		return;
-
+		
 	recorrer_arbol_inorden(pfi, ast->izq);
-	//printf("%s", ast->nodo);
 	fprintf(pfi, "%s\t", ast->nodo);
 	recorrer_arbol_inorden(pfi, ast->der);
 }
@@ -381,13 +382,13 @@ void guardar_tabla_de_simbolos(char* nombre, char* tipo, int es_id){
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].tipo, tipo); //agrego los datos. Un underscore en tipo represta una const.
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor,"-");
 	}else{
-		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre,strcat(guion,nombre));
-		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor,nombre);
+		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, strcat(guion, nombre));
+		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor, nombre);
 	}
 	
-	if(strcmp(tipo,STRING) == 0 && !es_id){ //si es un string y no es un id (algo como "hello hello hello"), guardo su longitud en la tabla.
-		itoa(strlen(nombre)-2,cad,10);
-		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud,cad); 
+	if(strcmp(tipo, STRING) == 0 && !es_id){ //si es un string y no es un id (algo como "hello hello hello"), guardo su longitud en la tabla.
+		itoa(strlen(nombre) - 2, cad, 10);
+		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, cad); 
 	}
 	puntero_tabla_simbolos++; //incremento la variable global del puntero para señalizar que agregué un elemento a la lista
 }
@@ -405,9 +406,9 @@ void guardar_cte_tabla_de_simbolos(char* nombre, char* tipo, char* valor_const){
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, nombre);
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].tipo, tipo); //agrego los datos. 
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor, valor_const);	
-	if(strcmp(tipo,CONSTFLOAT) == 0){ //si es un const string
+	if(strcmp(tipo, CONSTFLOAT) == 0){ //si es un const string
 		itoa(strlen(nombre),cad,10);
-		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud,cad); 
+		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, cad); 
 	}
 	puntero_tabla_simbolos++; //incremento la variable global del puntero para señalizar que agregué un elemento a la lista
 }
@@ -425,7 +426,7 @@ void verificar_existencia(char* id){
 void escribir_tabla_de_simbolos(){
 	FILE *pf; 
 	int i;
-	pf = fopen("ts.txt","w"); 
+	pf = fopen("ts.txt", "w"); 
 
 	if (!pf)
 	{
@@ -435,7 +436,7 @@ void escribir_tabla_de_simbolos(){
 
 	fprintf(pf, "Nombre\t\t\tTipo\t\t\tValor\t\t\tLongitud\n");
 	for (i = 0; i < puntero_tabla_simbolos; i++)
-		fprintf(pf,"%s\t\t\t%s\t\t\t%s\t\t\t%s\n", tabla_simbolos_s[i].nombre,tabla_simbolos_s[i].tipo,tabla_simbolos_s[i].valor,tabla_simbolos_s[i].longitud);	
+		fprintf(pf,"%s\t\t\t%s\t\t\t%s\t\t\t%s\n", tabla_simbolos_s[i].nombre, tabla_simbolos_s[i].tipo, tabla_simbolos_s[i].valor, tabla_simbolos_s[i].longitud);	
 	
 	fclose(pf); 
 }
