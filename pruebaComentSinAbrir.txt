@@ -1,9 +1,0 @@
-var
-	[integer, float] : [a,b]
-endvar
-
-b = 100
-a = 100
-const c = "lalala"
-
---/ primer, ahora cierro el "segundo" comment pero nunca lo abri /-- /--
