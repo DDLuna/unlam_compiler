@@ -83,28 +83,28 @@ COMENTARIO		"--/"(.*|\n|\r)"/--"
 
 /******SECCION CODIGO******/
 
-void verificarRangoEnt(){
+void verificarRangoEnt() {
 	if (atoi(yytext) > 32767 || atoi(yytext) < -32768){
 		printf("Se ha excedido el valor máximo de las constantes enteras");
 		exit(1);
 	}
 }
 
-void verificarRangoReal(){
+void verificarRangoReal() {
 	if (atof(yytext) > 8388608 || yyleng > 20 || atof(yytext) < -8388608) {
 		printf("Se ha excedido el valor máximo de las constantes reales");
 		exit(1);
 	}
 }
 
-void verificarTamanioString(){
+void verificarTamanioString() {
 	if(yyleng > 30){
 		printf("Se ha excedido el tamaño máximo de string");
 		exit(1);
 	}
 }
 
-void verificarNivelComentario(){
+void verificarNivelComentario() {
 
 	int i;
 	int nivelComentario = 1;
@@ -123,18 +123,18 @@ void verificarNivelComentario(){
 			}
 		}
 
-		if(nivelComentario < 0){
+		if(nivelComentario < 0) {
 				printf("\n Sintax error, faltan delimitadores de apertura de comentario");
 				exit(1);
 			}
 	}
 
-		if(nivelComentario > 0){
+		if(nivelComentario > 0) {
 				printf("\n Sintax error, faltan delimitadores de cierre de comentario");
 				exit(1);
 		}
 
-		if(nivelMaximo - nivelComentario > 2){
+		if(nivelMaximo - nivelComentario > 2) {
 			printf("\nHa introducido un comentario de mas de 2 niveles");
 			exit(1);
 		}
