@@ -1,14 +1,14 @@
 var
-	[integer,integer,integer] : [a,b,k]
+	[integer,float,integer] : [a,b,k]
 	[integer, float] : [j, l]
 endvar
 
 const c = "pepe"
-const d = 3.2
+const d = 3
 const e = 8.65
 
 a = 15
-b = 21111
+b = 21111.566
 
 if a >= 3 {
 	print a
@@ -32,7 +32,7 @@ b = 5 mod a
 repeat a >= 3 {
 	print "hola"
 }
-a = b + 3 * ( 5 div 52)
-if a <> b {
+a = b + 3 * ( 5 div 5.6)
+if a <> c {
 print c
 }
