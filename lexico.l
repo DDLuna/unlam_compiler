@@ -8,7 +8,8 @@
 	#include "y.tab.h"
 	#include <limits.h>
 
-	int yyleng;
+	int yyleng;	
+	int numero_de_linea = 1;
 
 	void verificarNivelComentario();
 	void verificarRangoEnt();
@@ -77,7 +78,7 @@ COMENTARIO		"--/"(.*|\n|\r)"/--"
 {CONST_STRING}	{ verificarTamanioString(); yylval.string=strdup(yytext); return CONST_STRING; }
 {COMENTARIO}	{verificarNivelComentario(); }
 
-"\n"
+"\n"		{ numero_de_linea++; }
 "\t"
 %%
 

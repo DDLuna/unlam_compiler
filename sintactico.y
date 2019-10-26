@@ -26,6 +26,11 @@ typedef struct arbol {
 	struct arbol *der;
 }arbol;
 
+struct error{
+	char* mensaje_error;
+	int numero_de_linea;
+};
+
 /***** FUNCIONES ****/
 void guardar_tabla_de_simbolos();
 void verificar_existencia();
@@ -36,9 +41,10 @@ arbol* crear_hoja(char* elemento, const char* tipo);
 void recorrer_arbol_inorden(FILE * pfi, arbol* ast);
 void print2DUtil(struct arbol *raiz, int espacio); 
 void print2D(struct arbol *raiz); 
-const char* calcular_resultante(const char*, const char*);
+const char* verificar_conflicto_tipos(const char*, const char*);
 const char* obtener_tipo_arbol(arbol* id);
-const char* obtener_tipo(char* id);
+const char* obtener_tipo(const char* id);
+void mostrar_errores();
 
 
 /********VARIABLES*********/
@@ -51,6 +57,8 @@ int contador_tipo_dato_leer = 0;
 const char* valor_const;
 int contador_variables = 0;
 arbol* a;
+int cantidad_errores = 0;
+struct error vector_errores[100];
 
 /********CONSTANTES*******/
 const char* STRING = "string";
@@ -136,7 +144,7 @@ char* op_log;
 /******SECCION DEFINICION DE REGLAS******/
 
 %%
-programaStart: programa {escribir_tabla_de_simbolos(); printf("Compilación exitosa\n"); $$ = $1; a = $$;}
+programaStart: programa {mostrar_errores(); escribir_tabla_de_simbolos(); printf("Compilación exitosa\n"); $$ = $1; a = $$;}
 ;
 
 programa: inicioVariables cuerpoPrograma {$$ = crear_nodo("PROG", NULL, NULL, $2);}
@@ -225,6 +233,7 @@ tipoCte: CONST_STRING {
 
 asignacion: ID OP_ASIG expresion {
 	verificar_existencia($1);
+	verificar_conflicto_tipos(obtener_tipo($1), obtener_tipo_arbol($3));
 	$$ = crear_nodo("=", obtener_tipo($1), crear_hoja($1, obtener_tipo($1)), $3);} 
 ;
 
@@ -244,7 +253,7 @@ condicion: comparacion
 | OP_NEG PAR_A comparacion PAR_C {$$ = crear_nodo("!", NULL, $3, NULL);} 
 ;
 
-comparacion: expresion comparador expresion {$$ = crear_nodo($2, calcular_resultante(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
+comparacion: expresion comparador expresion {$$ = crear_nodo($2, verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
 ;
 
 comparador: OP_COMP {$$ = "==";}
@@ -255,27 +264,49 @@ comparador: OP_COMP {$$ = "==";}
 | OP_DIST {$$ = "!=";}
 ;
 
-expresion: expresion OP_SUMA termino {$$ = crear_nodo("+", calcular_resultante(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
-| expresion OP_RESTA termino {$$ = crear_nodo("-", calcular_resultante(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
+expresion: expresion OP_SUMA termino {$$ = crear_nodo("+", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
+| expresion OP_RESTA termino {$$ = crear_nodo("-", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
 | termino {$$ = $1;}
 ;
 
-termino: termino OP_MULT factor {$$ = crear_nodo("*", calcular_resultante(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
-| termino OP_DIV factor {$$ = crear_nodo("/", calcular_resultante(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
-| termino DIV_ENT factor {$$ = crear_nodo("DIV", calcular_resultante(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
-| termino MODULO factor {$$ = crear_nodo("-", calcular_resultante(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, crear_nodo("*", calcular_resultante(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $3, crear_nodo("/", calcular_resultante(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3)));} //perdon
+termino: termino OP_MULT factor {$$ = crear_nodo("*", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
+| termino OP_DIV factor {$$ = crear_nodo("/", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
+| termino DIV_ENT factor {$$ = crear_nodo("DIV", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
+| termino MODULO factor {$$ = crear_nodo("-", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, crear_nodo("*", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $3, crear_nodo("/", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3)));} //perdon
 | factor {$$ = $1;}
 ;
 
 factor: PAR_A expresion PAR_C {$$ = $2;}
 | ID  {$$ = crear_hoja($1, obtener_tipo($1));}		
-| CONST_ENT {guardar_tabla_de_simbolos($1,INT, !ES_ID); $$ = crear_hoja($1, INT);}
+| CONST_ENT {guardar_tabla_de_simbolos($1, INT, !ES_ID); $$ = crear_hoja($1, INT);}
 | CONST_REAL {guardar_tabla_de_simbolos($1,FLOAT, !ES_ID); $$ = crear_hoja($1, FLOAT);}
 ;				  
 
 %%
 
 /******SECCION CODIGO******/
+
+void mostrar_errores(){
+	if (cantidad_errores == 0){
+		return;
+	}
+	printf("Se han encontrado los siguientes errores: \n");
+	int i;
+	for (i = 0; i < cantidad_errores; i++){
+		printf("Cerca de la linea: %d\tError: %s\n", vector_errores[i].numero_de_linea, vector_errores[i].mensaje_error);
+	}
+	exit(1);
+}
+
+void establecer_error(char* error){
+	extern int numero_de_linea;
+	if (cantidad_errores != 0 && vector_errores[cantidad_errores - 1].numero_de_linea == numero_de_linea){
+		return;
+	}
+	vector_errores[cantidad_errores].mensaje_error = error;
+	vector_errores[cantidad_errores].numero_de_linea = numero_de_linea;
+	cantidad_errores++;
+}
 
 /*
 * Dado un id, retorna su tipo
@@ -286,26 +317,29 @@ const char* obtener_tipo_arbol(arbol* id) {
 	}
 }
 
-const char* obtener_tipo(char* id) {
+const char* obtener_tipo(const char* id) {
 	int i;
 	for (i = 0; i < puntero_tabla_simbolos; i++) {
 		if (strcmp(id, tabla_simbolos_s[i].nombre) == 0) {
-			if (strcasecmp(tabla_simbolos_s[i].tipo, INT) == 0|| strcasecmp(tabla_simbolos_s[i].tipo, CONSTINT) == 0) {
+			if (strcasecmp(tabla_simbolos_s[i].tipo, INT) == 0 || strcasecmp(tabla_simbolos_s[i].tipo, CONSTINT) == 0) {
 				return INT;
 			}
 			return (strcasecmp(tabla_simbolos_s[i].tipo, FLOAT) == 0 || strcasecmp(tabla_simbolos_s[i].tipo, CONSTFLOAT) == 0) ? FLOAT : STRING;
 		}
 	}
-	printf("Error, id no hallado");
-	exit(1);
+	establecer_error("Id no hallado");
+	return FLOAT; //retorno un generico para que no pinche y continue recolectando errores
 }
 
 /*
-* Dado dos tipos de dato, retorna el resultante 
-* int, int -> int, float, float -> float, int, float -> float
+* Dado dos tipos de dato, determina si son compatibles (mismo tipo) 
 */
-const char* calcular_resultante(const char* a, const char* b) {
-	return strcmp(a, FLOAT) == 0 ? a : b;
+const char* verificar_conflicto_tipos(const char* a, const char* b) {
+	if (strcmp(a, b) == 0){
+		return a;
+	} 	
+	establecer_error("Conflicto de tipos");
+	return FLOAT; //retorno un generico para que no pinche y continue recolectando errores
 }
 
 
@@ -372,9 +406,9 @@ void guardar_tabla_de_simbolos(char* nombre, char* tipo, int es_id) {
 	char guion[30] = "_";
 	for (i = 0; i < puntero_tabla_simbolos; i++) {
 		if (strcmp(tabla_simbolos_s[i].nombre, nombre) == 0) { //verifico que el nombre del ID sea único
-			printf("ID con nombre repetido. Error de compilación");
-			exit(1);
-		}
+			establecer_error("ID con nombre repetido. Error de compilación");
+			return;
+			}
 	}
 
 	if (es_id) {
@@ -399,8 +433,8 @@ void guardar_cte_tabla_de_simbolos(char* nombre, char* tipo, char* valor_const) 
 	char guion[30] = "_";
 	for (i = 0; i < puntero_tabla_simbolos; i++) {
 		if (strcmp(tabla_simbolos_s[i].nombre, nombre) == 0) { //verifico que el nombre del ID sea único
-			printf("ID con nombre repetido. Error de compilación");
-			exit(1);
+			establecer_error("ID con nombre repetido. Error de compilación");
+			return;
 		}
 	}
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, nombre);
@@ -419,8 +453,8 @@ void verificar_existencia(char* id) {
 		if(strcmp(tabla_simbolos_s[i].nombre, id) == 0) //Si el id existe en mi tabla, salgo.
 			return;
 	}
-	printf("ID no declarado. Error de compilación");
-	exit(1);
+	establecer_error("ID no declarado.");
+	return;
 }
 
 void escribir_tabla_de_simbolos() {
@@ -429,8 +463,8 @@ void escribir_tabla_de_simbolos() {
 	pf = fopen("ts.txt", "w"); 
 
 	if (!pf) {
-		printf("Error al crear el archivo de tabla de simbolos\n");
-		exit(1);
+		establecer_error("Error al crear el archivo de tabla de simbolos\n");
+		return;
 	}
 
 	fprintf(pf, "Nombre\t\t\tTipo\t\t\tValor\t\t\tLongitud\n");
