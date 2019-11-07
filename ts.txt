@@ -1,0 +1,7 @@
+Nombre			Tipo			Valor			Longitud
+a			int			-			
+b			int			-			
+k			int			-			
+j			int			-			
+l			float			-			
+_"lala"						"lala"			6
