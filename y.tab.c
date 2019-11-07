@@ -2871,14 +2871,14 @@ void procesar_nodo(arbol* a){
         limpiar_pila();	
     }
 
-	    if (strcmp(a->nodo, "print") == 0) {
+	    if (strcmp(a->nodo, "PRINT") == 0) {
         fprintf(file,"\n\t; DISPLAY\n");
         fprintf(file,"\tdisplayString %s\n", a->der->nodo); //acá puede haber error xq trato todo como string
     }
 
-	    if (strcmp(a->nodo, "read") == 0) {
+	    if (strcmp(a->nodo, "READ") == 0) {
         fprintf(file,"\n\t; GET\n");
-        fprintf(file, "\tgetString %s\n", a->izq->nodo);
+        fprintf(file, "\tgetString %s\n", a->der->nodo);
     }
 }
 

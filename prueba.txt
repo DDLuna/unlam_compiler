@@ -4,3 +4,5 @@ var
 endvar
 
 print a
+
+read b

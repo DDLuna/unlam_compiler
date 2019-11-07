@@ -58,6 +58,12 @@ COPY ENDP
 
 
 
+	; DISPLAY
+	displayString a
+
+	; GET
+	getString b
+
 
 
 	; END PROGRAM 
