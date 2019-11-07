@@ -1,4 +1,5 @@
 include macros2.asm 
+include number.asm 
 
 
 .MODEL LARGE
@@ -13,6 +14,9 @@ MAXTEXTSIZE equ 40
 	k dd ?
 	j dd ?
 	l dd ?
+	_2 dd 2.0
+	i db 'lalala','$', 4251197 dup (?)
+	_lele db 'lele','$', 6684279 dup (?)
 	@SUMA dd ?
 	@MENOS dd ?
 	@DIVIDIR dd ?
@@ -55,14 +59,21 @@ COPYSIZEOK:
 	ret
 COPY ENDP
 
+START:
 
 
+
+	; ASIGNACION 
+	LEA SI, _2
+	LEA DI,a
+	CALL COPY
+
+	; ASIGNACION 
+	FLD lalala
+	FSTP i
 
 	; DISPLAY
-	displayString a
-
-	; GET
-	getString b
+	displayString lele
 
 
 
@@ -70,4 +81,4 @@ COPY ENDP
 
 	mov AX, 4C00h
 	int 21h
-END begin
+END START

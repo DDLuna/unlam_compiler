@@ -3,6 +3,7 @@ var
 	[integer, float] : [j, l]
 endvar
 
-print a
+a = 2
 
-read b
+const i = "lalala"
+print "lele"

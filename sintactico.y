@@ -82,6 +82,7 @@ void meter_pila_if_repeat();
 char* sacar_pila_if_repeat();
 int ver_tope_sentencias();
 char* invertir_operador(char* operador);
+char* remover_comillas();
 
 /********VARIABLES*********/
 struct tabla_simbolos tabla_simbolos_s[1000];
@@ -331,8 +332,8 @@ termino: termino OP_MULT factor {$$ = crear_nodo("*", verificar_conflicto_tipos(
 
 factor: PAR_A expresion PAR_C {$$ = $2;}
 | ID  {$$ = crear_hoja($1, obtener_tipo($1));}		
-| CONST_ENT {guardar_tabla_de_simbolos($1, INT, !ES_ID); $$ = crear_hoja($1, INT);}
-| CONST_REAL {guardar_tabla_de_simbolos($1,FLOAT, !ES_ID); $$ = crear_hoja($1, FLOAT);}
+| CONST_ENT {guardar_tabla_de_simbolos($1, INT, !ES_ID); $$ = crear_hoja(tabla_simbolos_s[puntero_tabla_simbolos-1].nombre, INT);}
+| CONST_REAL {guardar_tabla_de_simbolos($1,FLOAT, !ES_ID); $$ = crear_hoja(tabla_simbolos_s[puntero_tabla_simbolos-1].nombre, FLOAT);}
 ;				  
 
 %%
@@ -468,15 +469,19 @@ void guardar_tabla_de_simbolos(char* nombre, char* tipo, int es_id) {
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, nombre);
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].tipo, tipo); //agrego los datos. Un underscore en tipo represta una const.
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor,"-");
+		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud,"-");
 	} else {
+		if (strcmp(tipo, STRING) == 0) { //si es un string y no es un id (algo como "hello hello hello"), guardo su longitud en la tabla.
+			nombre = remover_comillas(nombre);
+			itoa(strlen(nombre), cad, 10);
+			strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, cad); 
+		} else {
+			strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, "-");
+		}
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, strcat(guion, nombre));
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor, nombre);
 	}
 	
-	if (strcmp(tipo, STRING) == 0 && !es_id) { //si es un string y no es un id (algo como "hello hello hello"), guardo su longitud en la tabla.
-		itoa(strlen(nombre), cad, 10);
-		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, cad); 
-	}
 	puntero_tabla_simbolos++; //incremento la variable global del puntero para señalizar que agregué un elemento a la lista
 }
 
@@ -490,21 +495,32 @@ void guardar_cte_tabla_de_simbolos(char* nombre, char* tipo, char* valor_const) 
 			return;
 		}
 	}
+	if (strcmp(tipo, CONSTSTRING) == 0) { //si es un const string
+		valor_const = remover_comillas(valor_const);
+		itoa(strlen(valor_const),cad,10);
+		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, cad); 
+	}
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, nombre);
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].tipo, tipo); //agrego los datos. 
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor, valor_const);	
-	if (strcmp(tipo, CONSTSTRING) == 0) { //si es un const string
-				itoa(strlen(valor_const),cad,10);
-		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, cad); 
-	}
 	puntero_tabla_simbolos++; //incremento la variable global del puntero para señalizar que agregué un elemento a la lista
+}
+
+char* remover_comillas(char* s){
+	char* aux = s;
+	while(*(s+1) != '"'){
+		*s = *(s+1);
+		s++;
+	}
+	*s = '\0';
+	return aux;
 }
 
 struct tabla_simbolos* buscar_en_ts(char* nombre){
 	int i;
 	for(i = 0; i < puntero_tabla_simbolos; i++){
-		if(strcmp(tabla_simbolos_s[puntero_tabla_simbolos].nombre,nombre) == 0){
-			return &tabla_simbolos_s[puntero_tabla_simbolos];
+		if(strcmp(tabla_simbolos_s[i].nombre,nombre) == 0){
+			return &tabla_simbolos_s[i];
 		}
 	}
 	return NULL;
@@ -573,7 +589,8 @@ void generar_assembler(arbol* a){
 * Inicializo el archivo assembler con los comandos requeridos
 */
 void inicializar_assembler() {
-	fprintf(file,"include macros2.asm \n\n\n");
+	fprintf(file,"include macros2.asm \n");
+	fprintf(file, "include number.asm \n\n\n");
     fprintf(file,".MODEL LARGE\n");
     fprintf(file,".386\n");
     fprintf(file,".STACK 200h\n\n");
@@ -592,7 +609,7 @@ void insertar_la_tabla_de_simbolos() {
 			fprintf(file,"\t%s dd ?\n", tabla_simbolos_s[i].nombre);
 		}
 
-		if (strcmp(tabla_simbolos_s[i].tipo, STRING) == 0 || strcmp(tabla_simbolos_s[i].tipo, CONSTSTRING) == 0) {
+		if (strcmp(tabla_simbolos_s[i].tipo, CONSTSTRING) == 0) {	
            fprintf(file,"\t%s db '%s','$', %d dup (?)\n", tabla_simbolos_s[i].nombre, tabla_simbolos_s[i].valor, tabla_simbolos_s[i].longitud);
         }
 
@@ -611,7 +628,7 @@ void insertar_la_tabla_de_simbolos() {
 }
 
 void escribir_cte(struct tabla_simbolos ts) {
-	if(ts.nombre[1] == '"'){
+	if(strcmp(ts.longitud,"-") != 0){
 		fprintf(file,"\t%s db '%s','$', %d dup (?)\n", ts.nombre, ts.valor, ts.longitud);
 		return;
 	}
@@ -682,6 +699,7 @@ void insertar_rutinas(){
     fprintf(file, "\tmov BYTE PTR [DI],al\n");
     fprintf(file, "\tret\n");
     fprintf(file, "COPY ENDP\n\n");
+	fprintf(file, "START:\n");
 }
 
 void finalizar_assembler(){
@@ -689,7 +707,7 @@ void finalizar_assembler(){
     fprintf(file,"\tmov AX, 4C00h\n");
     fprintf(file,"\tint 21h\n");
    
-    fprintf(file,"END begin\n");
+    fprintf(file,"END START\n");
 }
 
 void recorrer(arbol* a) {
@@ -883,7 +901,7 @@ void procesar_nodo(arbol* a){
         fprintf(file,"\n\t; ASIGNACION \n");
         if (strcmp(a->der->nodo, "@SUMA") != 0 && strcmp(a->der->nodo, "@MENOS") != 0 && strcmp(a->der->nodo, "@MULTIPLAR") != 0 && strcmp(a->der->nodo, "@DIVIDIR") != 0) {
             struct tabla_simbolos* simbolo = buscar_en_ts(a->der->nodo);
-            if(simbolo != NULL && simbolo->longitud > 0) {
+            if(simbolo != NULL && strcmp(simbolo->longitud, "-") == 0)  {
                 fprintf(file,"\tLEA SI, %s\n", a->der->nodo); 
                 fprintf(file,"\tLEA DI,%s\n", a->izq->nodo);
                 fprintf(file,"\tCALL COPY\n");

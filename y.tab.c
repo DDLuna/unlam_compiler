@@ -151,6 +151,7 @@ void meter_pila_if_repeat();
 char* sacar_pila_if_repeat();
 int ver_tope_sentencias();
 char* invertir_operador(char* operador);
+char* remover_comillas();
 
 /********VARIABLES*********/
 struct tabla_simbolos tabla_simbolos_s[1000];
@@ -193,7 +194,7 @@ const char* CONSTSTRING = "constString";
 
 
 /* Line 189 of yacc.c  */
-#line 197 "y.tab.c"
+#line 198 "y.tab.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -316,7 +317,7 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 126 "Sintactico.y"
+#line 127 "Sintactico.y"
 
 char* id;
 char* num;
@@ -328,7 +329,7 @@ char* op_log;
 
 
 /* Line 214 of yacc.c  */
-#line 332 "y.tab.c"
+#line 333 "y.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -340,7 +341,7 @@ char* op_log;
 
 
 /* Line 264 of yacc.c  */
-#line 344 "y.tab.c"
+#line 345 "y.tab.c"
 
 #ifdef short
 # undef short
@@ -648,12 +649,12 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   200,   200,   203,   204,   205,   208,   211,   212,   215,
-     216,   217,   218,   222,   223,   224,   228,   229,   232,   233,
-     236,   241,   248,   255,   264,   270,   275,   280,   287,   293,
-     296,   297,   300,   303,   304,   305,   306,   309,   312,   313,
-     314,   315,   316,   317,   320,   321,   322,   325,   326,   327,
-     328,   329,   332,   333,   334,   335
+       0,   201,   201,   204,   205,   206,   209,   212,   213,   216,
+     217,   218,   219,   223,   224,   225,   229,   230,   233,   234,
+     237,   242,   249,   256,   265,   271,   276,   281,   288,   294,
+     297,   298,   301,   304,   305,   306,   307,   310,   313,   314,
+     315,   316,   317,   318,   321,   322,   323,   326,   327,   328,
+     329,   330,   333,   334,   335,   336
 };
 #endif
 
@@ -1631,63 +1632,63 @@ yyreduce:
         case 2:
 
 /* Line 1455 of yacc.c  */
-#line 200 "Sintactico.y"
+#line 201 "Sintactico.y"
     {mostrar_errores(); escribir_tabla_de_simbolos(); printf("Compilación exitosa\n"); (yyval.ast) = (yyvsp[(1) - (1)].ast); a = (yyval.ast);}
     break;
 
   case 3:
 
 /* Line 1455 of yacc.c  */
-#line 203 "Sintactico.y"
+#line 204 "Sintactico.y"
     {(yyval.ast) = crear_nodo("PROG", NULL, NULL, (yyvsp[(2) - (2)].ast));}
     break;
 
   case 4:
 
 /* Line 1455 of yacc.c  */
-#line 204 "Sintactico.y"
+#line 205 "Sintactico.y"
     {(yyval.ast) = (yyvsp[(1) - (1)].ast);}
     break;
 
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 211 "Sintactico.y"
+#line 212 "Sintactico.y"
     {(yyval.ast) = crear_nodo("CUERPO_PROG", NULL, (yyvsp[(1) - (2)].ast), (yyvsp[(2) - (2)].ast));}
     break;
 
   case 8:
 
 /* Line 1455 of yacc.c  */
-#line 212 "Sintactico.y"
+#line 213 "Sintactico.y"
     {(yyval.ast) = (yyvsp[(1) - (1)].ast);}
     break;
 
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 215 "Sintactico.y"
+#line 216 "Sintactico.y"
     {(yyval.ast) = (yyvsp[(1) - (1)].ast);}
     break;
 
   case 10:
 
 /* Line 1455 of yacc.c  */
-#line 216 "Sintactico.y"
+#line 217 "Sintactico.y"
     {(yyval.ast) = (yyvsp[(1) - (1)].ast);}
     break;
 
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 217 "Sintactico.y"
+#line 218 "Sintactico.y"
     {(yyval.ast) = (yyvsp[(1) - (1)].ast);}
     break;
 
   case 12:
 
 /* Line 1455 of yacc.c  */
-#line 218 "Sintactico.y"
+#line 219 "Sintactico.y"
     {
 	guardar_tabla_de_simbolos((yyvsp[(2) - (2)].string), STRING, !ES_ID); 
 	(yyval.ast) = crear_nodo("PRINT", STRING, NULL, crear_hoja((yyvsp[(2) - (2)].string), NULL));
@@ -1697,21 +1698,21 @@ yyreduce:
   case 13:
 
 /* Line 1455 of yacc.c  */
-#line 222 "Sintactico.y"
+#line 223 "Sintactico.y"
     {(yyval.ast) = crear_nodo("PRINT", obtener_tipo((yyvsp[(2) - (2)].id)), NULL, crear_hoja((yyvsp[(2) - (2)].id), NULL));}
     break;
 
   case 14:
 
 /* Line 1455 of yacc.c  */
-#line 223 "Sintactico.y"
+#line 224 "Sintactico.y"
     {(yyval.ast) = crear_nodo("READ", obtener_tipo((yyvsp[(2) - (2)].id)), NULL, crear_hoja((yyvsp[(2) - (2)].id), NULL));}
     break;
 
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 236 "Sintactico.y"
+#line 237 "Sintactico.y"
     {
 	strcpy(vector_tipo_de_dato[contador_tipo_dato_escribir], INT);
 	contador_tipo_dato_escribir++;
@@ -1722,7 +1723,7 @@ yyreduce:
   case 21:
 
 /* Line 1455 of yacc.c  */
-#line 241 "Sintactico.y"
+#line 242 "Sintactico.y"
     {
 	strcpy(vector_tipo_de_dato[contador_tipo_dato_escribir],FLOAT);
 	contador_tipo_dato_escribir++;
@@ -1733,7 +1734,7 @@ yyreduce:
   case 22:
 
 /* Line 1455 of yacc.c  */
-#line 248 "Sintactico.y"
+#line 249 "Sintactico.y"
     {
 	if (contador_variables > 0) {
 		guardar_tabla_de_simbolos((yyvsp[(3) - (3)].id), vector_tipo_de_dato[contador_tipo_dato_leer], ES_ID);
@@ -1746,7 +1747,7 @@ yyreduce:
   case 23:
 
 /* Line 1455 of yacc.c  */
-#line 255 "Sintactico.y"
+#line 256 "Sintactico.y"
     {
 	if (contador_variables > 0) {
 		guardar_tabla_de_simbolos((yyvsp[(1) - (1)].id), vector_tipo_de_dato[contador_tipo_dato_leer], ES_ID);
@@ -1759,7 +1760,7 @@ yyreduce:
   case 24:
 
 /* Line 1455 of yacc.c  */
-#line 264 "Sintactico.y"
+#line 265 "Sintactico.y"
     {
 	guardar_cte_tabla_de_simbolos((yyvsp[(2) - (4)].id), tipo_dato, valor_const);
 	(yyval.ast) = crear_nodo("=", obtener_tipo((yyvsp[(2) - (4)].id)), crear_hoja((yyvsp[(2) - (4)].id), obtener_tipo((yyvsp[(2) - (4)].id))), (yyvsp[(4) - (4)].ast));  	
@@ -1769,7 +1770,7 @@ yyreduce:
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 270 "Sintactico.y"
+#line 271 "Sintactico.y"
     {
 	tipo_dato = CONSTSTRING;
 	valor_const = (yyvsp[(1) - (1)].string); 
@@ -1780,7 +1781,7 @@ yyreduce:
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 275 "Sintactico.y"
+#line 276 "Sintactico.y"
     {
 	tipo_dato = CONSTINT;
 	valor_const = (yyvsp[(1) - (1)].num);   
@@ -1791,7 +1792,7 @@ yyreduce:
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 280 "Sintactico.y"
+#line 281 "Sintactico.y"
     {
 	tipo_dato = CONSTFLOAT;
 	valor_const = (yyvsp[(1) - (1)].real); 
@@ -1802,7 +1803,7 @@ yyreduce:
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 287 "Sintactico.y"
+#line 288 "Sintactico.y"
     {
 	verificar_existencia((yyvsp[(1) - (3)].id));
 	verificar_conflicto_tipos(obtener_tipo((yyvsp[(1) - (3)].id)), obtener_tipo_arbol((yyvsp[(3) - (3)].ast)));
@@ -1812,7 +1813,7 @@ yyreduce:
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 293 "Sintactico.y"
+#line 294 "Sintactico.y"
     {
 	(yyval.ast) = crear_nodo("IF", NULL, (yyvsp[(2) - (9)].ast), crear_nodo("CUERPO_IF", NULL, (yyvsp[(4) - (9)].ast), (yyvsp[(8) - (9)].ast)));
 }
@@ -1821,182 +1822,182 @@ yyreduce:
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 296 "Sintactico.y"
+#line 297 "Sintactico.y"
     {(yyval.ast) = crear_nodo("IF", NULL, (yyvsp[(2) - (5)].ast), (yyvsp[(4) - (5)].ast));}
     break;
 
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 297 "Sintactico.y"
+#line 298 "Sintactico.y"
     {(yyval.ast) = crear_nodo("IF", NULL, (yyvsp[(2) - (3)].ast), (yyvsp[(3) - (3)].ast));}
     break;
 
   case 32:
 
 /* Line 1455 of yacc.c  */
-#line 300 "Sintactico.y"
+#line 301 "Sintactico.y"
     {(yyval.ast) = crear_nodo("REPEAT", NULL, (yyvsp[(2) - (5)].ast), (yyvsp[(4) - (5)].ast));}
     break;
 
   case 34:
 
 /* Line 1455 of yacc.c  */
-#line 304 "Sintactico.y"
+#line 305 "Sintactico.y"
     {(yyval.ast) = crear_nodo("AND", NULL, (yyvsp[(1) - (3)].ast), (yyvsp[(3) - (3)].ast));}
     break;
 
   case 35:
 
 /* Line 1455 of yacc.c  */
-#line 305 "Sintactico.y"
+#line 306 "Sintactico.y"
     {(yyval.ast) = crear_nodo("OR", NULL, (yyvsp[(1) - (3)].ast), (yyvsp[(3) - (3)].ast));}
     break;
 
   case 36:
 
 /* Line 1455 of yacc.c  */
-#line 306 "Sintactico.y"
+#line 307 "Sintactico.y"
     {(yyval.ast) = crear_nodo("!", NULL, (yyvsp[(3) - (4)].ast), NULL);}
     break;
 
   case 37:
 
 /* Line 1455 of yacc.c  */
-#line 309 "Sintactico.y"
+#line 310 "Sintactico.y"
     {(yyval.ast) = crear_nodo((yyvsp[(2) - (3)].op_log), verificar_conflicto_tipos(obtener_tipo_arbol((yyvsp[(1) - (3)].ast)), obtener_tipo_arbol((yyvsp[(3) - (3)].ast))), (yyvsp[(1) - (3)].ast), (yyvsp[(3) - (3)].ast));}
     break;
 
   case 38:
 
 /* Line 1455 of yacc.c  */
-#line 312 "Sintactico.y"
+#line 313 "Sintactico.y"
     {(yyval.op_log) = "==";}
     break;
 
   case 39:
 
 /* Line 1455 of yacc.c  */
-#line 313 "Sintactico.y"
+#line 314 "Sintactico.y"
     {(yyval.op_log) = ">";}
     break;
 
   case 40:
 
 /* Line 1455 of yacc.c  */
-#line 314 "Sintactico.y"
+#line 315 "Sintactico.y"
     {(yyval.op_log) = "<";}
     break;
 
   case 41:
 
 /* Line 1455 of yacc.c  */
-#line 315 "Sintactico.y"
+#line 316 "Sintactico.y"
     {(yyval.op_log) = ">=";}
     break;
 
   case 42:
 
 /* Line 1455 of yacc.c  */
-#line 316 "Sintactico.y"
+#line 317 "Sintactico.y"
     {(yyval.op_log) = "<=";}
     break;
 
   case 43:
 
 /* Line 1455 of yacc.c  */
-#line 317 "Sintactico.y"
+#line 318 "Sintactico.y"
     {(yyval.op_log) = "!=";}
     break;
 
   case 44:
 
 /* Line 1455 of yacc.c  */
-#line 320 "Sintactico.y"
+#line 321 "Sintactico.y"
     {(yyval.ast) = crear_nodo("+", verificar_conflicto_tipos(obtener_tipo_arbol((yyvsp[(1) - (3)].ast)), obtener_tipo_arbol((yyvsp[(3) - (3)].ast))), (yyvsp[(1) - (3)].ast), (yyvsp[(3) - (3)].ast));}
     break;
 
   case 45:
 
 /* Line 1455 of yacc.c  */
-#line 321 "Sintactico.y"
+#line 322 "Sintactico.y"
     {(yyval.ast) = crear_nodo("-", verificar_conflicto_tipos(obtener_tipo_arbol((yyvsp[(1) - (3)].ast)), obtener_tipo_arbol((yyvsp[(3) - (3)].ast))), (yyvsp[(1) - (3)].ast), (yyvsp[(3) - (3)].ast));}
     break;
 
   case 46:
 
 /* Line 1455 of yacc.c  */
-#line 322 "Sintactico.y"
+#line 323 "Sintactico.y"
     {(yyval.ast) = (yyvsp[(1) - (1)].ast);}
     break;
 
   case 47:
 
 /* Line 1455 of yacc.c  */
-#line 325 "Sintactico.y"
+#line 326 "Sintactico.y"
     {(yyval.ast) = crear_nodo("*", verificar_conflicto_tipos(obtener_tipo_arbol((yyvsp[(1) - (3)].ast)), obtener_tipo_arbol((yyvsp[(3) - (3)].ast))), (yyvsp[(1) - (3)].ast), (yyvsp[(3) - (3)].ast));}
     break;
 
   case 48:
 
 /* Line 1455 of yacc.c  */
-#line 326 "Sintactico.y"
+#line 327 "Sintactico.y"
     {(yyval.ast) = crear_nodo("/", verificar_conflicto_tipos(obtener_tipo_arbol((yyvsp[(1) - (3)].ast)), obtener_tipo_arbol((yyvsp[(3) - (3)].ast))), (yyvsp[(1) - (3)].ast), (yyvsp[(3) - (3)].ast));}
     break;
 
   case 49:
 
 /* Line 1455 of yacc.c  */
-#line 327 "Sintactico.y"
+#line 328 "Sintactico.y"
     {(yyval.ast) = crear_nodo("DIV", verificar_conflicto_tipos(obtener_tipo_arbol((yyvsp[(1) - (3)].ast)), obtener_tipo_arbol((yyvsp[(3) - (3)].ast))), (yyvsp[(1) - (3)].ast), (yyvsp[(3) - (3)].ast));}
     break;
 
   case 50:
 
 /* Line 1455 of yacc.c  */
-#line 328 "Sintactico.y"
+#line 329 "Sintactico.y"
     {(yyval.ast) = crear_nodo("-", verificar_conflicto_tipos(obtener_tipo_arbol((yyvsp[(1) - (3)].ast)), obtener_tipo_arbol((yyvsp[(3) - (3)].ast))), (yyvsp[(1) - (3)].ast), crear_nodo("*", verificar_conflicto_tipos(obtener_tipo_arbol((yyvsp[(1) - (3)].ast)), obtener_tipo_arbol((yyvsp[(3) - (3)].ast))), (yyvsp[(3) - (3)].ast), crear_nodo("/", verificar_conflicto_tipos(obtener_tipo_arbol((yyvsp[(1) - (3)].ast)), obtener_tipo_arbol((yyvsp[(3) - (3)].ast))), (yyvsp[(1) - (3)].ast), (yyvsp[(3) - (3)].ast))));}
     break;
 
   case 51:
 
 /* Line 1455 of yacc.c  */
-#line 329 "Sintactico.y"
+#line 330 "Sintactico.y"
     {(yyval.ast) = (yyvsp[(1) - (1)].ast);}
     break;
 
   case 52:
 
 /* Line 1455 of yacc.c  */
-#line 332 "Sintactico.y"
+#line 333 "Sintactico.y"
     {(yyval.ast) = (yyvsp[(2) - (3)].ast);}
     break;
 
   case 53:
 
 /* Line 1455 of yacc.c  */
-#line 333 "Sintactico.y"
+#line 334 "Sintactico.y"
     {(yyval.ast) = crear_hoja((yyvsp[(1) - (1)].id), obtener_tipo((yyvsp[(1) - (1)].id)));}
     break;
 
   case 54:
 
 /* Line 1455 of yacc.c  */
-#line 334 "Sintactico.y"
-    {guardar_tabla_de_simbolos((yyvsp[(1) - (1)].num), INT, !ES_ID); (yyval.ast) = crear_hoja((yyvsp[(1) - (1)].num), INT);}
+#line 335 "Sintactico.y"
+    {guardar_tabla_de_simbolos((yyvsp[(1) - (1)].num), INT, !ES_ID); (yyval.ast) = crear_hoja(tabla_simbolos_s[puntero_tabla_simbolos-1].nombre, INT);}
     break;
 
   case 55:
 
 /* Line 1455 of yacc.c  */
-#line 335 "Sintactico.y"
-    {guardar_tabla_de_simbolos((yyvsp[(1) - (1)].real),FLOAT, !ES_ID); (yyval.ast) = crear_hoja((yyvsp[(1) - (1)].real), FLOAT);}
+#line 336 "Sintactico.y"
+    {guardar_tabla_de_simbolos((yyvsp[(1) - (1)].real),FLOAT, !ES_ID); (yyval.ast) = crear_hoja(tabla_simbolos_s[puntero_tabla_simbolos-1].nombre, FLOAT);}
     break;
 
 
 
 /* Line 1455 of yacc.c  */
-#line 2000 "y.tab.c"
+#line 2001 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2208,7 +2209,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 338 "Sintactico.y"
+#line 339 "Sintactico.y"
 
 
 /******SECCION CODIGO******/
@@ -2342,15 +2343,19 @@ void guardar_tabla_de_simbolos(char* nombre, char* tipo, int es_id) {
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, nombre);
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].tipo, tipo); //agrego los datos. Un underscore en tipo represta una const.
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor,"-");
+		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud,"-");
 	} else {
+		if (strcmp(tipo, STRING) == 0) { //si es un string y no es un id (algo como "hello hello hello"), guardo su longitud en la tabla.
+			nombre = remover_comillas(nombre);
+			itoa(strlen(nombre), cad, 10);
+			strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, cad); 
+		} else {
+			strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, "-");
+		}
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, strcat(guion, nombre));
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor, nombre);
 	}
 	
-	if (strcmp(tipo, STRING) == 0 && !es_id) { //si es un string y no es un id (algo como "hello hello hello"), guardo su longitud en la tabla.
-		itoa(strlen(nombre), cad, 10);
-		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, cad); 
-	}
 	puntero_tabla_simbolos++; //incremento la variable global del puntero para señalizar que agregué un elemento a la lista
 }
 
@@ -2364,21 +2369,32 @@ void guardar_cte_tabla_de_simbolos(char* nombre, char* tipo, char* valor_const) 
 			return;
 		}
 	}
+	if (strcmp(tipo, CONSTSTRING) == 0) { //si es un const string
+		valor_const = remover_comillas(valor_const);
+		itoa(strlen(valor_const),cad,10);
+		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, cad); 
+	}
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, nombre);
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].tipo, tipo); //agrego los datos. 
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor, valor_const);	
-	if (strcmp(tipo, CONSTSTRING) == 0) { //si es un const string
-				itoa(strlen(valor_const),cad,10);
-		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, cad); 
-	}
 	puntero_tabla_simbolos++; //incremento la variable global del puntero para señalizar que agregué un elemento a la lista
+}
+
+char* remover_comillas(char* s){
+	char* aux = s;
+	while(*(s+1) != '"'){
+		*s = *(s+1);
+		s++;
+	}
+	*s = '\0';
+	return aux;
 }
 
 struct tabla_simbolos* buscar_en_ts(char* nombre){
 	int i;
 	for(i = 0; i < puntero_tabla_simbolos; i++){
-		if(strcmp(tabla_simbolos_s[puntero_tabla_simbolos].nombre,nombre) == 0){
-			return &tabla_simbolos_s[puntero_tabla_simbolos];
+		if(strcmp(tabla_simbolos_s[i].nombre,nombre) == 0){
+			return &tabla_simbolos_s[i];
 		}
 	}
 	return NULL;
@@ -2447,7 +2463,8 @@ void generar_assembler(arbol* a){
 * Inicializo el archivo assembler con los comandos requeridos
 */
 void inicializar_assembler() {
-	fprintf(file,"include macros2.asm \n\n\n");
+	fprintf(file,"include macros2.asm \n");
+	fprintf(file, "include number.asm \n\n\n");
     fprintf(file,".MODEL LARGE\n");
     fprintf(file,".386\n");
     fprintf(file,".STACK 200h\n\n");
@@ -2466,7 +2483,7 @@ void insertar_la_tabla_de_simbolos() {
 			fprintf(file,"\t%s dd ?\n", tabla_simbolos_s[i].nombre);
 		}
 
-		if (strcmp(tabla_simbolos_s[i].tipo, STRING) == 0 || strcmp(tabla_simbolos_s[i].tipo, CONSTSTRING) == 0) {
+		if (strcmp(tabla_simbolos_s[i].tipo, CONSTSTRING) == 0) {	
            fprintf(file,"\t%s db '%s','$', %d dup (?)\n", tabla_simbolos_s[i].nombre, tabla_simbolos_s[i].valor, tabla_simbolos_s[i].longitud);
         }
 
@@ -2485,7 +2502,7 @@ void insertar_la_tabla_de_simbolos() {
 }
 
 void escribir_cte(struct tabla_simbolos ts) {
-	if(ts.nombre[1] == '"'){
+	if(strcmp(ts.longitud,"-") != 0){
 		fprintf(file,"\t%s db '%s','$', %d dup (?)\n", ts.nombre, ts.valor, ts.longitud);
 		return;
 	}
@@ -2556,6 +2573,7 @@ void insertar_rutinas(){
     fprintf(file, "\tmov BYTE PTR [DI],al\n");
     fprintf(file, "\tret\n");
     fprintf(file, "COPY ENDP\n\n");
+	fprintf(file, "START:\n");
 }
 
 void finalizar_assembler(){
@@ -2563,7 +2581,7 @@ void finalizar_assembler(){
     fprintf(file,"\tmov AX, 4C00h\n");
     fprintf(file,"\tint 21h\n");
    
-    fprintf(file,"END begin\n");
+    fprintf(file,"END START\n");
 }
 
 void recorrer(arbol* a) {
@@ -2757,7 +2775,7 @@ void procesar_nodo(arbol* a){
         fprintf(file,"\n\t; ASIGNACION \n");
         if (strcmp(a->der->nodo, "@SUMA") != 0 && strcmp(a->der->nodo, "@MENOS") != 0 && strcmp(a->der->nodo, "@MULTIPLAR") != 0 && strcmp(a->der->nodo, "@DIVIDIR") != 0) {
             struct tabla_simbolos* simbolo = buscar_en_ts(a->der->nodo);
-            if(simbolo != NULL && simbolo->longitud > 0) {
+            if(simbolo != NULL && strcmp(simbolo->longitud, "-") == 0)  {
                 fprintf(file,"\tLEA SI, %s\n", a->der->nodo); 
                 fprintf(file,"\tLEA DI,%s\n", a->izq->nodo);
                 fprintf(file,"\tCALL COPY\n");
