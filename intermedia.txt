@@ -1,1 +1,1 @@
-PROG	PRINT	"lala"	
+PROG	PRINT	a	

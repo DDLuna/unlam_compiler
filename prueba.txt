@@ -3,4 +3,4 @@ var
 	[integer, float] : [j, l]
 endvar
 
-print "lala"
+print a

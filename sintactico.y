@@ -81,6 +81,7 @@ char* obtener_operador_contrario(char* op);
 void meter_pila_if_repeat();
 char* sacar_pila_if_repeat();
 int ver_tope_sentencias();
+char* invertir_operador(char* operador);
 
 /********VARIABLES*********/
 struct tabla_simbolos tabla_simbolos_s[1000];
@@ -97,6 +98,7 @@ struct error vector_errores[100];
 FILE *file;
 struct pila_para_sentencias* pila_if;
 struct pila_para_sentencias* pila_repeat;
+struct pila_para_sentencias* pila_else;
 struct pila_para_operadores* pila_operadores;
 struct pila_para_if_y_repeat* pila_if_repeat;
 int contador_etiquetas_if;
@@ -106,6 +108,9 @@ int contador_etiquetas_repeat = 0;
 int cantidad_if_anidados = -1;
 int hubo_and = 0;
 int usar_misma_etiqueta_repeat = 0;
+int debo_invertir_operador = 0;
+int contador_etiqueta_else = 0;
+int contador_else = 0;
 
 
 /********CONSTANTES*******/
@@ -545,6 +550,9 @@ void generar_assembler(arbol* a){
     pila_if = (struct pila_para_sentencias*) malloc(sizeof(struct pila_para_sentencias)); 
     pila_if->sentencia = (int*) malloc(5000* sizeof(int));
 	pila_if->tope = 0; 
+	pila_else = (struct pila_para_sentencias*) malloc(sizeof(struct pila_para_sentencias));
+	pila_else->sentencia = (int*) malloc(5000* sizeof(int));
+	pila_else->tope = 0;
     pila_repeat = (struct pila_para_sentencias*) malloc(sizeof(struct pila_para_sentencias)); 
     pila_repeat->sentencia = (int*) malloc(5000* sizeof(int)); 
 	pila_repeat->tope = 0;
@@ -700,14 +708,26 @@ void recorrer(arbol* a) {
 	    if (strcmp(a->nodo, "IF") == 0) {
         contador_etiquetas_if++;
 		meter_pila_if_repeat("IF");
-    }
+		if(strcmp(a->der->nodo, "CUERPO_IF") == 0) {
+				contador_else++;
+		}
+    }	
+
+		if(strcmp(a->nodo, "!") == 0){
+		debo_invertir_operador = 1;
+	}
 	
 	recorrer(a->izq);
 	    if (strcmp(a->nodo, "AND") == 0) {
 				char* op = sacar_pila_operadores();
 			if(strcmp(sacar_pila_if_repeat(),"IF") == 0){
 				usar_misma_etiqueta_if = 1;
-				fprintf(file, "\n\t%s ETIQUETA_IF_%d\n", obtener_operador(op),contador_etiquetas_if);
+				if(contador_else == 0){
+					fprintf(file, "\n\t%s ETIQUETA_IF_%d\n", obtener_operador(op),contador_etiquetas_if);
+				} else {
+					fprintf(file, "\n\t%s ETIQUETA_ELSE_%d\n", obtener_operador(op), contador_etiqueta_else);
+					contador_else--;
+				}
 				poner_pila_sentencias(pila_if, contador_etiquetas_if);
 		} else {
 			usar_misma_etiqueta_repeat = 1;
@@ -721,8 +741,14 @@ void recorrer(arbol* a) {
 			char* op = sacar_pila_operadores();
 			if(strcmp(sacar_pila_if_repeat(),"IF") == 0){
 			usar_misma_etiqueta_if = 0;  
-			fprintf(file, "\n\t%s ETIQUETA_IF_%d\n", obtener_operador_contrario(op), contador_etiquetas_if); //Si en el OR la primera me da verdadera, salto (por el operador posta, si tengo > salto por mayor) al then.
-			poner_pila_sentencias(pila_if, contador_etiquetas_if);
+				if(contador_else == 0){
+				fprintf(file, "\n\t%s ETIQUETA_IF_%d\n", obtener_operador_contrario(op), contador_etiquetas_if); //Si en el OR la primera me da verdadera, salto (por el operador posta, si tengo > salto por mayor) al then.
+				poner_pila_sentencias(pila_if, contador_etiquetas_if);
+				} else {
+				fprintf(file, "\n\t%s ETIQUETA_IF_ADENTRO_%d\n", obtener_operador_contrario(op), contador_etiqueta_else);	
+				poner_pila_sentencias(pila_else, contador_etiqueta_else);
+				contador_else--;
+				}
 			} else {
 				fprintf(file, "\n\t%s ETIQUETA_REPEAT_DENTRO_%d\n", obtener_operador_contrario(op), ver_tope_sentencias(pila_repeat));
 			}
@@ -731,23 +757,38 @@ void recorrer(arbol* a) {
     }
 		
 	    if (strcmp(a->nodo, "IF") == 0) {
-        char* op = sacar_pila_operadores();
-        if (usar_misma_etiqueta_if != 1) {
-            contador_etiquetas_if++;
-        } else {
-            usar_misma_etiqueta_if = 0;
-        }
-        fprintf(file, "\n\t%s ETIQUETA_IF_%d\n", obtener_operador(op),contador_etiquetas_if);
+			char* op = sacar_pila_operadores();
+			if(strcmp(a->der->nodo, "CUERPO_IF") != 0){
+				if (usar_misma_etiqueta_if != 1) {
+					contador_etiquetas_if++;
+				} else {
+					usar_misma_etiqueta_if = 0;
+				}
+				fprintf(file, "\n\t%s ETIQUETA_IF_%d\n", obtener_operador(op),contador_etiquetas_if);
 
-        if (hubo_or) {
-            fprintf(file,"ETIQUETA_IF_%d:\n", sacar_pila_sentencias(pila_if));
-            hubo_or = 0;
-        }
-		if(!hubo_and) {
-	    poner_pila_sentencias(pila_if, contador_etiquetas_if);
-		}
-		hubo_and = 0;
+				if (hubo_or) {
+					fprintf(file,"ETIQUETA_IF_%d:\n", sacar_pila_sentencias(pila_if));
+					hubo_or = 0;
+				}
+			} else {
+				fprintf(file, "\n\t%s ETIQUETA_ELSE_%d\n", obtener_operador(op),contador_etiqueta_else);
+				if(hubo_or){
+					fprintf(file, "ETIQUETA_IF_ADENTRO_%d\n", sacar_pila_sentencias(pila_else));
+					hubo_or = 0;
+				}
+				poner_pila_sentencias(pila_else, contador_etiqueta_else);
+				contador_etiqueta_else++;
+			}
+			if(!hubo_and) {
+					poner_pila_sentencias(pila_if, contador_etiquetas_if);
+				}
+			hubo_and = 0;
     }
+
+	if(strcmp(a->nodo, "CUERPO_IF") == 0){
+		fprintf(file,"\n\tJMP ETIQUETA_IF_%d:\n", ver_tope_sentencias(pila_if));
+		fprintf(file, "ETIQUETA_ELSE_%d\n", sacar_pila_sentencias(pila_else));
+	}
 
    if (strcmp(a->nodo, "REPEAT") == 0) {
         char* op = sacar_pila_operadores();		
@@ -894,6 +935,14 @@ void procesar_nodo(arbol* a){
         limpiar_pila();
     }
 
+	if(debo_invertir_operador){
+		char* aux = invertir_operador(a->nodo);
+		if(aux){
+			a->nodo = aux;
+			debo_invertir_operador = 0;
+		}
+	}
+
 	    if (strcmp(a->nodo, ">=") == 0) {
         fprintf(file,"\n\t; >= \n");
         fprintf(file,"\tFLD %s\n", a->izq->nodo);
@@ -945,18 +994,47 @@ void procesar_nodo(arbol* a){
 	    if (strcmp(a->nodo, "IF") == 0) {
         fprintf(file,"ETIQUETA_IF_%d:\n", sacar_pila_sentencias(pila_if));
         contador_etiquetas_if++;
-        limpiar_pila();
+        limpiar_pila();	
     }
 
 	    if (strcmp(a->nodo, "print") == 0) {
         fprintf(file,"\n\t; DISPLAY\n");
-        fprintf(file,"\tdisplayString %s\n", a->izq->nodo); //acá puede haber error xq trato todo como string
+        fprintf(file,"\tdisplayString %s\n", a->der->nodo); //acá puede haber error xq trato todo como string
     }
 
 	    if (strcmp(a->nodo, "read") == 0) {
         fprintf(file,"\n\t; GET\n");
         fprintf(file, "\tgetString %s\n", a->izq->nodo);
     }
+}
+
+char* invertir_operador(char* operador){
+	if(strcmp(operador, ">") == 0){
+		return "<=";
+	}
+
+	if(strcmp(operador, "<") == 0){
+		return ">=";
+	}
+
+	if(strcmp(operador, "<=") == 0){
+		return ">";
+	}
+
+	if(strcmp(operador, ">=") == 0){
+		return "<";
+	}
+
+	if(strcmp(operador, "==") == 0){
+		return "!=";
+	}
+
+	if(strcmp(operador, "!=") == 0){
+		return "==";
+	}
+
+	return NULL;
+
 }
 
 int sacar_pila_sentencias(struct pila_para_sentencias* pila) { 
@@ -1009,6 +1087,7 @@ int main(int argc, char *argv[]) {
 	print2D(a); 
 	recorrer_arbol_inorden(pfi,a);
 	generar_assembler(a);
+	printf("Todo ok\n");
 
   	fclose(yyin);
   	return 0;

@@ -13,7 +13,6 @@ MAXTEXTSIZE equ 40
 	k dd ?
 	j dd ?
 	l dd ?
-	_"lala" db '"lala"','$', 6684279 dup (?)
 	@SUMA dd ?
 	@MENOS dd ?
 	@DIVIDIR dd ?
