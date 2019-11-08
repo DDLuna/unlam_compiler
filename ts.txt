@@ -1,4 +1,9 @@
 Nombre			Tipo			Valor			Longitud
 a			int			-			-
 b			int			-			-
-j			constString			hols			4
+c			float			-			-
+d			constString			soy una constante string			24
+_3						3			-
+_3						3			-
+_2_23						2.23			-
+_lala						lala			4
