@@ -339,7 +339,7 @@ termino: termino OP_MULT factor {$$ = crear_nodo("*", verificar_conflicto_tipos(
 
 factor: PAR_A expresion PAR_C {$$ = $2;}
 | ID  {$$ = crear_hoja($1, obtener_tipo($1));}		
-| CONST_ENT {guardar_tabla_de_simbolos($1, INT, !ES_ID); $$ = crear_hoja(buscar_con_nombre_modificado($1), INT);}
+| CONST_ENT {guardar_tabla_de_simbolos($1, INT, !ES_ID); $$ = crear_hoja(buscar_con_nombre_modificado($1), INT);} //ESTA LÍNEA Y LA QUE SIGUE FUERON CAMBIADAS LUEGO DEL 2DO PARCIAL.
 | CONST_REAL {guardar_tabla_de_simbolos($1,FLOAT, !ES_ID); $$ = crear_hoja(buscar_con_nombre_modificado($1), FLOAT);}
 ;				  
 
