@@ -876,7 +876,7 @@ char* obtener_operador(char* op) {
 
 char* obtener_operador_contrario(char* op) {
 	if (strcmp(op, ">=") == 0) {
-            return "JGE";
+            return "JB";
     }
 
     if (strcmp(op, ">") == 0) {
