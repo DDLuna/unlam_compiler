@@ -11,10 +11,12 @@ MAXTEXTSIZE equ 40
 .DATA
 	a dd ?
 	b dd ?
+	c dd ?
+	d db "soy una constante string",'$', 24 dup (?)
 	_3 dd 3.0
-	_4 dd 4.0
-	_true db "true",'$', 4 dup (?)
-	_false db "false",'$', 5 dup (?)
+	_3 dd 3.0
+	_2_23 dd 2.23.0
+	_lala db "lala",'$', 4 dup (?)
 	@SUMA dd ?
 	@MENOS dd ?
 	@DIVIDIR dd ?
@@ -65,25 +67,16 @@ START:
 	FLD _3
 	FSTP a
 
-	; < 
+	; == 
 	FLD a
-	FLD _4
-	FXCH
+	FLD _3
 	FCOM
-	FSTSW AX
-	SAHF
+	JNE ETIQUETA_IF_2
 
-	JAE ETIQUETA_ELSE_0
-
-	; DISPLAY
-	displayString _true
-
-	JMP ETIQUETA_IF_1
-ETIQUETA_ELSE_0:
-
-	; DISPLAY
-	displayString _false
-ETIQUETA_IF_1:
+	; ASIGNACION 
+	FLD _2_23
+	FSTP c
+ETIQUETA_IF_2:
 
 	; STACK CLENUP
 	FFREE st(0)
@@ -95,6 +88,22 @@ ETIQUETA_IF_1:
 	FFREE st(6)
 	FFREE st(7)
 
+
+	; DISPLAY
+	displayString d
+ 	 newLine 1
+
+	; DISPLAY
+	displayInteger a,3
+ 	newLine 1
+
+	; DISPLAY
+	displayFloat c,3
+ 	newLine 1
+
+	; DISPLAY
+	displayString lala
+ 	 newLine 1
 
 
 

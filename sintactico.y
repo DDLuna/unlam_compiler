@@ -83,6 +83,7 @@ char* sacar_pila_if_repeat();
 int ver_tope_sentencias();
 char* invertir_operador(char* operador);
 char* remover_comillas();
+char* reemplazar_punto_por_(char* a);
 
 /********VARIABLES*********/
 struct tabla_simbolos tabla_simbolos_s[1000];
@@ -463,7 +464,9 @@ void guardar_tabla_de_simbolos(char* nombre, char* tipo, int es_id) {
 			establecer_error("ID con nombre repetido. Error de compilación");
 			return;
 			}
-	}
+	}	
+
+
 
 	if (es_id) {
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, nombre);
@@ -476,10 +479,13 @@ void guardar_tabla_de_simbolos(char* nombre, char* tipo, int es_id) {
 			itoa(strlen(nombre), cad, 10);
 			strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, cad); 
 		} else {
-			strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, "-");
+		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, "-");
 		}
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, strcat(guion, nombre));
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor, nombre);
+		if(strcmp(tipo, FLOAT) == 0) {
+			strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, reemplazar_punto_por_(tabla_simbolos_s[puntero_tabla_simbolos].nombre));
+		}
 	}
 	
 	puntero_tabla_simbolos++; //incremento la variable global del puntero para señalizar que agregué un elemento a la lista
@@ -504,6 +510,18 @@ void guardar_cte_tabla_de_simbolos(char* nombre, char* tipo, char* valor_const) 
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].tipo, tipo); //agrego los datos. 
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor, valor_const);	
 	puntero_tabla_simbolos++; //incremento la variable global del puntero para señalizar que agregué un elemento a la lista
+}
+
+char* reemplazar_punto_por_(char* a){
+	char* aux = a;
+	printf("%s\n", a);
+	while(*a != '.' && *a != '\0'){
+		a++;	
+	}
+	if(*a == '.'){
+		*a = '_';
+	}
+	return aux;
 }
 
 char* remover_comillas(char* s){
@@ -1030,7 +1048,16 @@ void procesar_nodo(arbol* a){
 
 	    if (strcmp(a->nodo, "PRINT") == 0) {
         fprintf(file,"\n\t; DISPLAY\n");
-        fprintf(file,"\tdisplayString _%s\n", a->der->nodo); //acá puede haber error xq trato todo como string
+		printf("%s\n", a->tipo);
+		if(strcmp(a->tipo, INT) == 0 || strcmp(a->tipo, CONSTINT) == 0){
+			fprintf(file,"\tdisplayInteger %s,3\n \tnewLine 1\n", a->der->nodo);
+			return;
+		}
+		if(strcmp(a->tipo, FLOAT) == 0 || strcmp(a->tipo, CONSTFLOAT) == 0){
+			fprintf(file, "\tdisplayFloat %s,3\n \tnewLine 1\n", a->der->nodo);
+			return;
+		}
+        fprintf(file,"\tdisplayString %s\n \t newLine 1\n", a->der->nodo); 
     }
 
 	    if (strcmp(a->nodo, "READ") == 0) {

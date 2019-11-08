@@ -1,11 +1,13 @@
 var
-	[integer,integer] : [a,b]
+	[integer,integer,float] : [a,b,c]
 endvar
 
+const d = "soy una constante string"
 a = 3
-
-if a < 4 {
-	print "true"
-}else{
-	print "false"
+if a == 3 {
+c = 2.23
 }
+print d
+print a
+print c
+print "lala"
