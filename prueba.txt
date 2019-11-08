@@ -2,6 +2,10 @@ var
 	[integer,integer] : [a,b]
 endvar
 
-const j = "hols"
+a = 3
 
-print j
+if a < 4 {
+	print "true"
+}else{
+	print "false"
+}

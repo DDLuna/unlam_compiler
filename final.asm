@@ -11,7 +11,10 @@ MAXTEXTSIZE equ 40
 .DATA
 	a dd ?
 	b dd ?
-	j db "hols",'$', 4 dup (?)
+	_3 dd 3.0
+	_4 dd 4.0
+	_true db "true",'$', 4 dup (?)
+	_false db "false",'$', 5 dup (?)
 	@SUMA dd ?
 	@MENOS dd ?
 	@DIVIDIR dd ?
@@ -59,11 +62,39 @@ START:
 
 
 	; ASIGNACION 
-	FLD hols
-	FSTP j
+	FLD _3
+	FSTP a
+
+	; < 
+	FLD a
+	FLD _4
+	FXCH
+	FCOM
+	FSTSW AX
+	SAHF
+
+	JAE ETIQUETA_ELSE_0
 
 	; DISPLAY
-	displayString _j
+	displayString _true
+
+	JMP ETIQUETA_IF_1
+ETIQUETA_ELSE_0:
+
+	; DISPLAY
+	displayString _false
+ETIQUETA_IF_1:
+
+	; STACK CLENUP
+	FFREE st(0)
+	FFREE st(1)
+	FFREE st(2)
+	FFREE st(3)
+	FFREE st(4)
+	FFREE st(5)
+	FFREE st(6)
+	FFREE st(7)
+
 
 
 

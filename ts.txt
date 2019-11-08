@@ -1,4 +1,7 @@
 Nombre			Tipo			Valor			Longitud
 a			int			-			-
 b			int			-			-
-j			constString			hols			4
+_3						3			-
+_4						4			-
+_true						true			4
+_false						false			5

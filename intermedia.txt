@@ -1,1 +1,1 @@
-PROG	j	=	hols	CUERPO_PROG	PRINT	j	
+PROG	a	=	_3	CUERPO_PROG	a	<	_4	IF	PRINT	true	CUERPO_IF	PRINT	false	
