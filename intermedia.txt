@@ -1,1 +1,1 @@
-PROG	a	=	_2	CUERPO_PROG	i	=	lalala	CUERPO_PROG	PRINT	lele	
+PROG	j	=	hols	CUERPO_PROG	PRINT	j	

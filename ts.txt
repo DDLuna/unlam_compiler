@@ -1,9 +1,4 @@
 Nombre			Tipo			Valor			Longitud
 a			int			-			-
 b			int			-			-
-k			int			-			-
-j			int			-			-
-l			float			-			-
-_2						2			-
-i			constString			lalala			6
-_lele						lele			4
+j			constString			hols			4

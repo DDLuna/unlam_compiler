@@ -1,9 +1,7 @@
 var
-	[integer,integer,integer] : [a,b,k]
-	[integer, float] : [j, l]
+	[integer,integer] : [a,b]
 endvar
 
-a = 2
+const j = "hols"
 
-const i = "lalala"
-print "lele"
+print j

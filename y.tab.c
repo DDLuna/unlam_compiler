@@ -2484,7 +2484,7 @@ void insertar_la_tabla_de_simbolos() {
 		}
 
 		if (strcmp(tabla_simbolos_s[i].tipo, CONSTSTRING) == 0) {	
-           fprintf(file,"\t%s db '%s','$', %d dup (?)\n", tabla_simbolos_s[i].nombre, tabla_simbolos_s[i].valor, tabla_simbolos_s[i].longitud);
+           fprintf(file,"\t%s db \"%s\",'$', %s dup (?)\n", tabla_simbolos_s[i].nombre, tabla_simbolos_s[i].valor, tabla_simbolos_s[i].longitud);
         }
 
 		 if (strcmp(tabla_simbolos_s[i].tipo, CONSTINT) == 0) {
@@ -2503,7 +2503,7 @@ void insertar_la_tabla_de_simbolos() {
 
 void escribir_cte(struct tabla_simbolos ts) {
 	if(strcmp(ts.longitud,"-") != 0){
-		fprintf(file,"\t%s db '%s','$', %d dup (?)\n", ts.nombre, ts.valor, ts.longitud);
+		fprintf(file,"\t%s db \"%s\",'$', %s dup (?)\n", ts.nombre, ts.valor, ts.longitud);
 		return;
 	}
 
@@ -2527,12 +2527,6 @@ int contiene_punto(const char* a){
 void insertar_bloque_de_codigo_inicial() {
 	    fprintf(file,"\n\n");
     fprintf(file,".code\n");
-    
-       
-    fprintf(file,"\tmov AX,@DATA\n");
-    fprintf(file,"\tmov DS,AX\n");
-    fprintf(file,"\tmov ES,AX\n");
-    fprintf(file,"\tfinit\n\n");
 	insertar_rutinas();
     fprintf(file,"\n\n");
 }
@@ -2574,6 +2568,11 @@ void insertar_rutinas(){
     fprintf(file, "\tret\n");
     fprintf(file, "COPY ENDP\n\n");
 	fprintf(file, "START:\n");
+
+	fprintf(file,"\tmov AX,@DATA\n");
+    fprintf(file,"\tmov DS,AX\n");
+    fprintf(file,"\tmov ES,AX\n");
+    fprintf(file,"\tfinit\n\n");
 }
 
 void finalizar_assembler(){
@@ -2891,7 +2890,7 @@ void procesar_nodo(arbol* a){
 
 	    if (strcmp(a->nodo, "PRINT") == 0) {
         fprintf(file,"\n\t; DISPLAY\n");
-        fprintf(file,"\tdisplayString %s\n", a->der->nodo); //acá puede haber error xq trato todo como string
+        fprintf(file,"\tdisplayString _%s\n", a->der->nodo); //acá puede haber error xq trato todo como string
     }
 
 	    if (strcmp(a->nodo, "READ") == 0) {
@@ -2930,6 +2929,7 @@ char* invertir_operador(char* operador){
 }
 
 int sacar_pila_sentencias(struct pila_para_sentencias* pila) { 
+    
     return pila->sentencia[pila->tope--];
 }
 
@@ -2937,6 +2937,7 @@ int sacar_pila_sentencias(struct pila_para_sentencias* pila) {
 void poner_pila_sentencias(struct pila_para_sentencias* pila, int item) { 
     pila->tope++;
 	pila->sentencia[pila->tope] = item; 
+
 } 
 
 char* sacar_pila_operadores() { 
@@ -2976,7 +2977,7 @@ int main(int argc, char *argv[]) {
 		printf("Error al crear el archivo de tabla de simbolos\n");
 		exit(1);
 	}
-	print2D(a); 
+	//print2D(a); 
 	recorrer_arbol_inorden(pfi,a);
 	generar_assembler(a);
 	printf("Todo ok\n");

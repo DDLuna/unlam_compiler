@@ -11,12 +11,7 @@ MAXTEXTSIZE equ 40
 .DATA
 	a dd ?
 	b dd ?
-	k dd ?
-	j dd ?
-	l dd ?
-	_2 dd 2.0
-	i db 'lalala','$', 4251197 dup (?)
-	_lele db 'lele','$', 6684279 dup (?)
+	j db "hols",'$', 4 dup (?)
 	@SUMA dd ?
 	@MENOS dd ?
 	@DIVIDIR dd ?
@@ -25,11 +20,6 @@ MAXTEXTSIZE equ 40
 
 
 .code
-	mov AX,@DATA
-	mov DS,AX
-	mov ES,AX
-	finit
-
 
 
 	; ROUTINES
@@ -60,20 +50,20 @@ COPYSIZEOK:
 COPY ENDP
 
 START:
+	mov AX,@DATA
+	mov DS,AX
+	mov ES,AX
+	finit
+
 
 
 
 	; ASIGNACION 
-	LEA SI, _2
-	LEA DI,a
-	CALL COPY
-
-	; ASIGNACION 
-	FLD lalala
-	FSTP i
+	FLD hols
+	FSTP j
 
 	; DISPLAY
-	displayString lele
+	displayString _j
 
 
 
