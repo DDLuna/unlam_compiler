@@ -333,7 +333,7 @@ expresion: expresion OP_SUMA termino {$$ = crear_nodo("+", verificar_conflicto_t
 termino: termino OP_MULT factor {$$ = crear_nodo("*", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
 | termino OP_DIV factor {$$ = crear_nodo("/", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
 | termino DIV_ENT factor {$$ = crear_nodo("/", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
-| termino MODULO factor {$$ = crear_nodo("-", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, crear_nodo("*", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $3, crear_nodo("/", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3)));} //perdon
+| termino MODULO factor {$$ = crear_nodo("MOD", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
 | factor {$$ = $1;}
 ;
 
@@ -1025,6 +1025,16 @@ void procesar_nodo(arbol* a){
         fprintf(file,"\t%s %s\n", asignar, a->nodo);
         limpiar_pila();
     }
+
+	if(strcmp(a->nodo, "MOD") == 0){
+		fprintf(file,"\n\t;RESIDUO\n");
+		fprintf(file,"\t%s %s\n", cargar, a->der->nodo);
+		fprintf(file,"\t%s %s\n", cargar, a->izq->nodo);
+		fprintf(file,"\tFPREM\n");
+		a->nodo = "@DIVIDIR";
+		fprintf(file,"\t%s %s\n", asignar, a->nodo);
+		limpiar_pila();
+	}
 
 	if(debo_invertir_operador){
 		char* aux = invertir_operador(a->nodo);

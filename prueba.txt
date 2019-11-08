@@ -31,5 +31,26 @@ if a <> 3 {
 	}
 }
 
-c = 7.2 / 4.2
+a = 10 / 3
+print a
+
+c = 10.0 mod 3.12
 print c
+
+a = 6 mod 6
+print a
+
+a = 7 mod 6
+print a
+
+a = 8 mod 6
+print a
+
+a = 9 mod 6
+print a
+
+a = 10 mod 6
+print a
+
+a = 11 mod 6
+print a

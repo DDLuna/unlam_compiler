@@ -26,8 +26,13 @@ MAXTEXTSIZE equ 40
 	_a_es_par db "a es par",'$', 8 dup (?)
 	_a_es_impar db "a es impar",'$', 10 dup (?)
 	_1 dd 1
-	_7_2 dd 7.2
-	_4_2 dd 4.2
+	_10_0 dd 10.0
+	_3_12 dd 3.12
+	_6 dd 6
+	_7 dd 7
+	_8 dd 8
+	_9 dd 9
+	_11 dd 11
 	@SUMA dd ?
 	@MENOS dd ?
 	@DIVIDIR dd ?
@@ -196,9 +201,10 @@ ETIQUETA_REPEAT_1:
 
 	JAE ETIQUETA_REPEAT_FUERA_1
 
-	; DIVIDE 
+	;RESIDUO
+	FILD _2
 	FILD a
-	FIDIV _2
+	FPREM
 	FISTP @DIVIDIR
 
 	; Limpar_pila
@@ -212,42 +218,8 @@ ETIQUETA_REPEAT_1:
 	FFREE st(7)
 
 
-	; MULTIPLICA 
-	FILD _2
-	FILD @DIVIDIR
-	FMUL
-	FISTP @MULTIPLICAR
-
-	; Limpar_pila
-	FFREE st(0)
-	FFREE st(1)
-	FFREE st(2)
-	FFREE st(3)
-	FFREE st(4)
-	FFREE st(5)
-	FFREE st(6)
-	FFREE st(7)
-
-
-	; RESTA 
-	FILD a
-	FILD @MULTIPLICAR
-	FSUB
-	FISTP @MENOS
-
-	; Limpar_pila
-	FFREE st(0)
-	FFREE st(1)
-	FFREE st(2)
-	FFREE st(3)
-	FFREE st(4)
-	FFREE st(5)
-	FFREE st(6)
-	FFREE st(7)
-
-
 	; == 
-	FILD @MENOS
+	FILD @DIVIDIR
 	FILD _0
 	FXCH
 	FCOM
@@ -310,7 +282,7 @@ ETIQUETA_IF_1:
 
 	JMP ETIQUETA_REPEAT_1
 ETIQUETA_REPEAT_FUERA_1:
-ETIQUETA_IF_12320960:
+ETIQUETA_IF_11206848:
 
 	; Limpar_pila
 	FFREE st(0)
@@ -324,8 +296,33 @@ ETIQUETA_IF_12320960:
 
 
 	; DIVIDE 
-	FLD _7_2
-	FDIV _4_2
+	FILD _10
+	FIDIV _3
+	FISTP @DIVIDIR
+
+	; Limpar_pila
+	FFREE st(0)
+	FFREE st(1)
+	FFREE st(2)
+	FFREE st(3)
+	FFREE st(4)
+	FFREE st(5)
+	FFREE st(6)
+	FFREE st(7)
+
+
+	; ASIGNACION 
+	FILD @DIVIDIR
+	FISTP a
+
+	; printeo
+	displayInteger a
+ 	newLine 1
+
+	;RESIDUO
+	FLD _3_12
+	FLD _10_0
+	FPREM
 	FSTP @DIVIDIR
 
 	; Limpar_pila
@@ -345,6 +342,156 @@ ETIQUETA_IF_12320960:
 
 	; printeo
 	displayFloat c,3
+ 	newLine 1
+
+	;RESIDUO
+	FILD _6
+	FILD _6
+	FPREM
+	FISTP @DIVIDIR
+
+	; Limpar_pila
+	FFREE st(0)
+	FFREE st(1)
+	FFREE st(2)
+	FFREE st(3)
+	FFREE st(4)
+	FFREE st(5)
+	FFREE st(6)
+	FFREE st(7)
+
+
+	; ASIGNACION 
+	FILD @DIVIDIR
+	FISTP a
+
+	; printeo
+	displayInteger a
+ 	newLine 1
+
+	;RESIDUO
+	FILD _6
+	FILD _7
+	FPREM
+	FISTP @DIVIDIR
+
+	; Limpar_pila
+	FFREE st(0)
+	FFREE st(1)
+	FFREE st(2)
+	FFREE st(3)
+	FFREE st(4)
+	FFREE st(5)
+	FFREE st(6)
+	FFREE st(7)
+
+
+	; ASIGNACION 
+	FILD @DIVIDIR
+	FISTP a
+
+	; printeo
+	displayInteger a
+ 	newLine 1
+
+	;RESIDUO
+	FILD _6
+	FILD _8
+	FPREM
+	FISTP @DIVIDIR
+
+	; Limpar_pila
+	FFREE st(0)
+	FFREE st(1)
+	FFREE st(2)
+	FFREE st(3)
+	FFREE st(4)
+	FFREE st(5)
+	FFREE st(6)
+	FFREE st(7)
+
+
+	; ASIGNACION 
+	FILD @DIVIDIR
+	FISTP a
+
+	; printeo
+	displayInteger a
+ 	newLine 1
+
+	;RESIDUO
+	FILD _6
+	FILD _9
+	FPREM
+	FISTP @DIVIDIR
+
+	; Limpar_pila
+	FFREE st(0)
+	FFREE st(1)
+	FFREE st(2)
+	FFREE st(3)
+	FFREE st(4)
+	FFREE st(5)
+	FFREE st(6)
+	FFREE st(7)
+
+
+	; ASIGNACION 
+	FILD @DIVIDIR
+	FISTP a
+
+	; printeo
+	displayInteger a
+ 	newLine 1
+
+	;RESIDUO
+	FILD _6
+	FILD _10
+	FPREM
+	FISTP @DIVIDIR
+
+	; Limpar_pila
+	FFREE st(0)
+	FFREE st(1)
+	FFREE st(2)
+	FFREE st(3)
+	FFREE st(4)
+	FFREE st(5)
+	FFREE st(6)
+	FFREE st(7)
+
+
+	; ASIGNACION 
+	FILD @DIVIDIR
+	FISTP a
+
+	; printeo
+	displayInteger a
+ 	newLine 1
+
+	;RESIDUO
+	FILD _6
+	FILD _11
+	FPREM
+	FISTP @DIVIDIR
+
+	; Limpar_pila
+	FFREE st(0)
+	FFREE st(1)
+	FFREE st(2)
+	FFREE st(3)
+	FFREE st(4)
+	FFREE st(5)
+	FFREE st(6)
+	FFREE st(7)
+
+
+	; ASIGNACION 
+	FILD @DIVIDIR
+	FISTP a
+
+	; printeo
+	displayInteger a
  	newLine 1
 
 
