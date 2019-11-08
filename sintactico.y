@@ -84,6 +84,9 @@ int ver_tope_sentencias();
 char* invertir_operador(char* operador);
 char* remover_comillas();
 char* reemplazar_punto_por_(char* a);
+char* cambiar_espacio_por_(char* a);
+int es_constante_repetida(char* nombre);
+char* buscar_con_nombre_modificado(char* a);
 
 /********VARIABLES*********/
 struct tabla_simbolos tabla_simbolos_s[1000];
@@ -113,6 +116,9 @@ int usar_misma_etiqueta_repeat = 0;
 int debo_invertir_operador = 0;
 int contador_etiqueta_else = 0;
 int contador_else = 0;
+char* cargar;
+char* asignar;
+char* instruccion_dividir;
 
 
 /********CONSTANTES*******/
@@ -326,20 +332,29 @@ expresion: expresion OP_SUMA termino {$$ = crear_nodo("+", verificar_conflicto_t
 
 termino: termino OP_MULT factor {$$ = crear_nodo("*", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
 | termino OP_DIV factor {$$ = crear_nodo("/", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
-| termino DIV_ENT factor {$$ = crear_nodo("DIV", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
+| termino DIV_ENT factor {$$ = crear_nodo("/", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3);}
 | termino MODULO factor {$$ = crear_nodo("-", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, crear_nodo("*", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $3, crear_nodo("/", verificar_conflicto_tipos(obtener_tipo_arbol($1), obtener_tipo_arbol($3)), $1, $3)));} //perdon
 | factor {$$ = $1;}
 ;
 
 factor: PAR_A expresion PAR_C {$$ = $2;}
 | ID  {$$ = crear_hoja($1, obtener_tipo($1));}		
-| CONST_ENT {guardar_tabla_de_simbolos($1, INT, !ES_ID); $$ = crear_hoja(tabla_simbolos_s[puntero_tabla_simbolos-1].nombre, INT);}
-| CONST_REAL {guardar_tabla_de_simbolos($1,FLOAT, !ES_ID); $$ = crear_hoja(tabla_simbolos_s[puntero_tabla_simbolos-1].nombre, FLOAT);}
+| CONST_ENT {guardar_tabla_de_simbolos($1, INT, !ES_ID); $$ = crear_hoja(buscar_con_nombre_modificado($1), INT);}
+| CONST_REAL {guardar_tabla_de_simbolos($1,FLOAT, !ES_ID); $$ = crear_hoja(buscar_con_nombre_modificado($1), FLOAT);}
 ;				  
 
 %%
 
 /******SECCION CODIGO******/
+
+char* buscar_con_nombre_modificado(char* a){
+	int i;
+	for(i = 0; i < puntero_tabla_simbolos; i++){
+		if(strcmp(tabla_simbolos_s[i].nombre + 1, a) == 0){
+			return tabla_simbolos_s[i].nombre;
+		}
+	}
+}
 
 void mostrar_errores(){
 	if (cantidad_errores == 0){
@@ -465,15 +480,18 @@ void guardar_tabla_de_simbolos(char* nombre, char* tipo, int es_id) {
 			return;
 			}
 	}	
-
-
-
 	if (es_id) {
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, nombre);
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].tipo, tipo); //agrego los datos. Un underscore en tipo represta una const.
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor,"-");
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud,"-");
 	} else {
+		if(es_constante_repetida(nombre)){
+			return;
+		}
+		if(strcmp(tipo, FLOAT) == 0 && es_float_repetido(nombre)){
+			return;
+		}
 		if (strcmp(tipo, STRING) == 0) { //si es un string y no es un id (algo como "hello hello hello"), guardo su longitud en la tabla.
 			nombre = remover_comillas(nombre);
 			itoa(strlen(nombre), cad, 10);
@@ -481,14 +499,58 @@ void guardar_tabla_de_simbolos(char* nombre, char* tipo, int es_id) {
 		} else {
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, "-");
 		}
-		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, strcat(guion, nombre));
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor, nombre);
+		nombre = cambiar_espacio_por_(nombre);
 		if(strcmp(tipo, FLOAT) == 0) {
-			strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, reemplazar_punto_por_(tabla_simbolos_s[puntero_tabla_simbolos].nombre));
+			strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, reemplazar_punto_por_(nombre));
+
 		}
+		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, strcat(guion, nombre));
+	}
+	puntero_tabla_simbolos++; //incremento la variable global del puntero para señalizar que agregué un elemento a la lista
+}
+
+char* cambiar_espacio_por_(char* a){
+	char* aux = a;
+	while(*a != '\0'){
+		if(*a == ' '){
+			*a = '_';
+		}
+		a++;
+	}
+	return aux;
+}
+
+int es_constante_repetida(char* nombre){
+	int i;
+	for(i = 0; i < puntero_tabla_simbolos; i++){
+	if(strcmp(tabla_simbolos_s[i].nombre + 1, nombre) == 0){
+		return 1;
+		}	
 	}
 	
-	puntero_tabla_simbolos++; //incremento la variable global del puntero para señalizar que agregué un elemento a la lista
+	return 0;
+}
+
+int es_float_repetido(char* nombre){
+	char aux[101];
+	strcpy(aux, nombre);
+	reemplazar_punto_por_(aux);
+	if(es_constante_repetida(aux)){
+		return 1;
+	}
+	return 0;
+}
+
+char* reemplazar_punto_por_(char* a){
+	char* aux = a;
+	while(*a != '.' && *a != '\0'){
+		a++;	
+	}
+	if(*a == '.'){
+		*a = '_';
+	}
+	return aux;
 }
 
 void guardar_cte_tabla_de_simbolos(char* nombre, char* tipo, char* valor_const) {
@@ -512,17 +574,6 @@ void guardar_cte_tabla_de_simbolos(char* nombre, char* tipo, char* valor_const) 
 	puntero_tabla_simbolos++; //incremento la variable global del puntero para señalizar que agregué un elemento a la lista
 }
 
-char* reemplazar_punto_por_(char* a){
-	char* aux = a;
-	printf("%s\n", a);
-	while(*a != '.' && *a != '\0'){
-		a++;	
-	}
-	if(*a == '.'){
-		*a = '_';
-	}
-	return aux;
-}
 
 char* remover_comillas(char* s){
 	char* aux = s;
@@ -547,13 +598,13 @@ struct tabla_simbolos* buscar_en_ts(char* nombre){
 void verificar_existencia(char* id) {
 	int i;
 	for (i = 0; i < puntero_tabla_simbolos; i++) {
-		if(strcmp(tabla_simbolos_s[i].nombre, id) == 0) //Si el id existe en mi tabla, salgo.
-			return;
+		if(strcmp(tabla_simbolos_s[i].nombre, id) == 0){  //Si el id existe en mi tabla, salgo.
+				return;
+		}
 	}
 	printf("ID no declarado. Error de compilación");
 	exit(1);
 }
-
 void escribir_tabla_de_simbolos() {
 	FILE *pf; 
 	int i;
@@ -623,25 +674,25 @@ void insertar_la_tabla_de_simbolos() {
 	int i;
 	for(i = 0; i < puntero_tabla_simbolos; i++) {
 
+		if(tabla_simbolos_s[i].nombre[0] == '_') {
+			escribir_cte(tabla_simbolos_s[i]);
+		}
 		if(strcmp(tabla_simbolos_s[i].tipo, INT) == 0 || strcmp(tabla_simbolos_s[i].tipo, FLOAT) == 0) {
 			fprintf(file,"\t%s dd ?\n", tabla_simbolos_s[i].nombre);
 		}
 
 		if (strcmp(tabla_simbolos_s[i].tipo, CONSTSTRING) == 0) {	
-           fprintf(file,"\t%s db \"%s\",'$', %s dup (?)\n", tabla_simbolos_s[i].nombre, tabla_simbolos_s[i].valor, tabla_simbolos_s[i].longitud);
+           fprintf(file,"\t_%s db \"%s\",'$', %s dup (?)\n", tabla_simbolos_s[i].nombre, tabla_simbolos_s[i].valor, tabla_simbolos_s[i].longitud);
         }
 
 		 if (strcmp(tabla_simbolos_s[i].tipo, CONSTINT) == 0) {
-            fprintf(file,"\t%s dd %s.0\n", tabla_simbolos_s[i].nombre, tabla_simbolos_s[i].valor);
-        }
-
-        if (strcmp(tabla_simbolos_s[i].tipo, "CONSTFLOAT") == 0) {
             fprintf(file,"\t%s dd %s\n", tabla_simbolos_s[i].nombre, tabla_simbolos_s[i].valor);
         }
 
-		if(tabla_simbolos_s[i].nombre[0] == '_') {
-			escribir_cte(tabla_simbolos_s[i]);
-		}
+        if (strcmp(tabla_simbolos_s[i].tipo, CONSTFLOAT) == 0) {
+            fprintf(file,"\t%s dd %s\n", tabla_simbolos_s[i].nombre, tabla_simbolos_s[i].valor);
+        }
+
 	}
 }
 
@@ -651,12 +702,12 @@ void escribir_cte(struct tabla_simbolos ts) {
 		return;
 	}
 
-	if(contiene_punto(ts.nombre)){
+	if(contiene_punto(ts.valor)){
 		fprintf(file,"\t%s dd %s\n", ts.nombre, ts.valor);
 		return;
 	}
 
-	fprintf(file,"\t%s dd %s.0\n", ts.nombre, ts.valor);
+	fprintf(file,"\t%s dd %s\n", ts.nombre, ts.valor);
 	return;
 }
 
@@ -679,12 +730,12 @@ void insertar_auxiliares(){
 	fprintf(file,"\t@SUMA dd ?\n");
     fprintf(file,"\t@MENOS dd ?\n");
     fprintf(file,"\t@DIVIDIR dd ?\n");
-    fprintf(file,"\t@MULTIPLAR dd ?\n");
+    fprintf(file,"\t@MULTIPLICAR dd ?\n");
     fprintf(file,"\t@AUXILIAR dd ?\n");
 }
 
 void insertar_rutinas(){
-    fprintf(file, "\n\n\t; ROUTINES\n");
+    fprintf(file, "\n\n\t; RUTINAS\n");
     fprintf(file, "STRLEN PROC\n");
     fprintf(file, "\tmov bx,0\n");
     fprintf(file, "STRL01:\n");
@@ -720,7 +771,7 @@ void insertar_rutinas(){
 }
 
 void finalizar_assembler(){
-    fprintf(file,"\n\n\n\t; END PROGRAM \n\n");
+    fprintf(file,"\n\n\n\t; FIN PROGRAMA \n\n");
     fprintf(file,"\tmov AX, 4C00h\n");
     fprintf(file,"\tint 21h\n");
    
@@ -808,7 +859,7 @@ void recorrer(arbol* a) {
 			} else {
 				fprintf(file, "\n\t%s ETIQUETA_ELSE_%d\n", obtener_operador(op),contador_etiqueta_else);
 				if(hubo_or){
-					fprintf(file, "ETIQUETA_IF_ADENTRO_%d\n", sacar_pila_sentencias(pila_else));
+					fprintf(file, "ETIQUETA_IF_ADENTRO_%d:\n", sacar_pila_sentencias(pila_else));
 					hubo_or = 0;
 				}
 				poner_pila_sentencias(pila_else, contador_etiqueta_else);
@@ -876,19 +927,19 @@ char* obtener_operador(char* op) {
 
 char* obtener_operador_contrario(char* op) {
 	if (strcmp(op, ">=") == 0) {
-            return "JB";
+            return "JAE";
     }
 
     if (strcmp(op, ">") == 0) {
-            return "JG";
+            return "JA";
     }
 
     if (strcmp(op, "<=") == 0) {
-            return "JLE";
+            return "JBE";
     }
 
     if (strcmp(op, "<") == 0) {
-            return "JL";
+            return "JB";
     }
 
     if (strcmp(op, "==") == 0) {
@@ -901,7 +952,7 @@ char* obtener_operador_contrario(char* op) {
 }
 
 void limpiar_pila() {
-     fprintf(file, "\n\t; STACK CLENUP\n"); 
+     fprintf(file, "\n\t; Limpar_pila\n"); 
      fprintf(file, "\tFFREE st(0)\n");
      fprintf(file, "\tFFREE st(1)\n");
      fprintf(file, "\tFFREE st(2)\n");
@@ -914,55 +965,64 @@ void limpiar_pila() {
 }
 
 void procesar_nodo(arbol* a){
+	if(a->tipo != NULL && (strcmp(a->tipo, INT) == 0 || strcmp(a->tipo, CONSTINT) == 0)){
+		cargar = "FILD";
+		asignar = "FISTP";
+		instruccion_dividir = "FIDIV";
+	}  else {
+		cargar = "FLD";
+		asignar = "FSTP";
+		instruccion_dividir = "FDIV";
+	}
 	if (strcmp(a->nodo, "=") == 0) {
-        if (strcmp(a->der->nodo, "@SUMA") != 0 && strcmp(a->der->nodo, "@MENOS") != 0 && strcmp(a->der->nodo, "@MULTIPLAR") != 0 && strcmp(a->der->nodo, "@DIVIDIR") != 0) {
+        if (strcmp(a->der->nodo, "@SUMA") != 0 && strcmp(a->der->nodo, "@MENOS") != 0 && strcmp(a->der->nodo, "@MULTIPLICAR") != 0 && strcmp(a->der->nodo, "@DIVIDIR") != 0) {
             struct tabla_simbolos* simbolo = buscar_en_ts(a->izq->nodo);
             if(simbolo != NULL && strcmp(simbolo->longitud, "-") != 0)  {
                 return;
             }
         }    
         fprintf(file,"\n\t; ASIGNACION \n");
-        fprintf(file,"\tFLD %s\n", a->der->nodo);
-        fprintf(file,"\tFSTP %s\n", a->izq->nodo);
+        fprintf(file,"\t%s %s\n", cargar, a->der->nodo);
+        fprintf(file,"\t%s %s\n", asignar, a->izq->nodo);
     } 
 
     if (strcmp(a->nodo, "+") == 0) {
         fprintf(file,"\n\t; SUMA \n");
-        fprintf(file,"\tFLD %s\n", a->izq->nodo);
-        fprintf(file,"\tFLD %s\n", a->der->nodo);
+        fprintf(file,"\t%s %s\n", cargar, a->izq->nodo);
+        fprintf(file,"\t%s %s\n", cargar, a->der->nodo);
         fprintf(file,"\tFADD\n");
-        a->nodo = "@SUM";
-        fprintf(file,"\tFSTP %s\n", a->nodo);
+        a->nodo = "@SUMA";
+        fprintf(file,"\t%s %s\n", asignar, a->nodo);
         limpiar_pila();
     }
 
     if (strcmp(a->nodo, "-") == 0) {
         fprintf(file,"\n\t; RESTA \n");
-        fprintf(file,"\tFLD %s\n", a->izq->nodo);
-        fprintf(file,"\tFLD %s\n", a->der->nodo);
+        fprintf(file,"\t%s %s\n", cargar, a->izq->nodo);
+        fprintf(file,"\t%s %s\n", cargar, a->der->nodo);
         fprintf(file,"\tFSUB\n");
         a->nodo = "@MENOS";
-        fprintf(file,"\tFSTP %s\n", a->nodo);
+        fprintf(file,"\t%s %s\n", asignar, a->nodo);
         limpiar_pila();
     }
 
     if (strcmp(a->nodo, "*") == 0) {
         fprintf(file,"\n\t; MULTIPLICA \n");
-        fprintf(file,"\tFLD %s\n", a->izq->nodo);
-        fprintf(file,"\tFLD %s\n", a->der->nodo);
+        fprintf(file,"\t%s %s\n", cargar, a->izq->nodo);
+        fprintf(file,"\t%s %s\n", cargar, a->der->nodo);
         fprintf(file,"\tFMUL\n");
         a->nodo = "@MULTIPLICAR";
-        fprintf(file,"\tFSTP %s\n", a->nodo);
+        fprintf(file,"\t%s %s\n", asignar, a->nodo);
         limpiar_pila();
     }
 
     if (strcmp(a->nodo, "/") == 0) {
         fprintf(file,"\n\t; DIVIDE \n");
-        fprintf(file,"\tFLD %s\n", a->izq->nodo);
-        fprintf(file,"\tFLD %s\n", a->der->nodo);
-        fprintf(file,"\tFDIV\n");
+        fprintf(file,"\t%s %s\n", cargar, a->izq->nodo);
+        fprintf(file,"\t%s %s\n", instruccion_dividir, a->der->nodo);
+        //fprintf(file,"\tFDIV\n");
         a->nodo = "@DIVIDIR";
-        fprintf(file,"\tFSTP %s\n", a->nodo);
+        fprintf(file,"\t%s %s\n", asignar, a->nodo);
         limpiar_pila();
     }
 
@@ -976,8 +1036,8 @@ void procesar_nodo(arbol* a){
 
 	    if (strcmp(a->nodo, ">=") == 0) {
         fprintf(file,"\n\t; >= \n");
-        fprintf(file,"\tFLD %s\n", a->izq->nodo);
-        fprintf(file,"\tFLD %s\n", a->der->nodo);
+        fprintf(file,"\t%s %s\n", cargar, a->izq->nodo);
+        fprintf(file,"\t%s %s\n", cargar, a->der->nodo);
         fprintf(file,"\tFXCH\n");
         fprintf(file,"\tFCOM\n");
         fprintf(file,"\tFSTSW AX\n");
@@ -987,8 +1047,8 @@ void procesar_nodo(arbol* a){
 
 	    if (strcmp(a->nodo, "<=") == 0) {
         fprintf(file,"\n\t; <= \n");
-        fprintf(file,"\tFLD %s\n", a->izq->nodo);
-        fprintf(file,"\tFLD %s\n", a->der->nodo);
+        fprintf(file,"\t%s %s\n", cargar, a->izq->nodo);
+        fprintf(file,"\t%s %s\n", cargar, a->der->nodo);
 		fprintf(file,"\tFXCH\n");
         fprintf(file,"\tFCOM\n");
         fprintf(file,"\tFSTSW AX\n");
@@ -998,8 +1058,8 @@ void procesar_nodo(arbol* a){
 
 	    if (strcmp(a->nodo, ">") == 0) {
         fprintf(file,"\n\t; > \n");
-        fprintf(file,"\tFLD %s\n", a->izq->nodo);
-        fprintf(file,"\tFLD %s\n", a->der->nodo);
+        fprintf(file,"\t%s %s\n", cargar, a->izq->nodo);
+        fprintf(file,"\t%s %s\n", cargar, a->der->nodo);
 		fprintf(file,"\tFXCH\n");
         fprintf(file,"\tFCOM\n");
         fprintf(file,"\tFSTSW AX\n");
@@ -1009,8 +1069,8 @@ void procesar_nodo(arbol* a){
 
 	    if (strcmp(a->nodo, "<") == 0) {
         fprintf(file,"\n\t; < \n");
-        fprintf(file,"\tFLD %s\n", a->izq->nodo);
-        fprintf(file,"\tFLD %s\n", a->der->nodo);
+        fprintf(file,"\t%s %s\n", cargar, a->izq->nodo);
+        fprintf(file,"\t%s %s\n", cargar, a->der->nodo);
 		fprintf(file,"\tFXCH\n");
         fprintf(file,"\tFCOM\n");
         fprintf(file,"\tFSTSW AX\n");
@@ -1020,8 +1080,8 @@ void procesar_nodo(arbol* a){
 
 	    if (strcmp(a->nodo, "==") == 0) {
         fprintf(file,"\n\t; == \n");
-        fprintf(file,"\tFLD %s\n", a->izq->nodo);
-        fprintf(file,"\tFLD %s\n", a->der->nodo);
+        fprintf(file,"\t%s %s\n", cargar, a->izq->nodo);
+        fprintf(file,"\t%s %s\n", cargar,a->der->nodo);
 		fprintf(file,"\tFXCH\n");
         fprintf(file,"\tFCOM\n");
         fprintf(file,"\tFSTSW AX\n");
@@ -1031,8 +1091,8 @@ void procesar_nodo(arbol* a){
 
 	    if (strcmp(a->nodo, "!=") == 0) {
         fprintf(file,"\n\t; != \n");
-        fprintf(file,"\tFLD %s\n", a->izq->nodo);
-        fprintf(file,"\tFLD %s\n", a->der->nodo);
+        fprintf(file,"\t%s %s\n", cargar, a->izq->nodo);
+        fprintf(file,"\t%s %s\n", cargar, a->der->nodo);
 		fprintf(file,"\tFXCH\n");
         fprintf(file,"\tFCOM\n");
         fprintf(file,"\tFSTSW AX\n");
@@ -1047,22 +1107,31 @@ void procesar_nodo(arbol* a){
     }
 
 	    if (strcmp(a->nodo, "PRINT") == 0) {
-        fprintf(file,"\n\t; DISPLAY\n");
-		printf("%s\n", a->tipo);
+        fprintf(file,"\n\t; printeo\n");
+
 		if(strcmp(a->tipo, INT) == 0 || strcmp(a->tipo, CONSTINT) == 0){
-			fprintf(file,"\tdisplayInteger %s,3\n \tnewLine 1\n", a->der->nodo);
+			fprintf(file,"\tdisplayInteger %s\n \tnewLine 1\n", a->der->nodo);
 			return;
 		}
 		if(strcmp(a->tipo, FLOAT) == 0 || strcmp(a->tipo, CONSTFLOAT) == 0){
 			fprintf(file, "\tdisplayFloat %s,3\n \tnewLine 1\n", a->der->nodo);
 			return;
 		}
-        fprintf(file,"\tdisplayString %s\n \t newLine 1\n", a->der->nodo); 
+		
+		if(a->der->tipo != NULL) {
+    	    fprintf(file,"\tdisplayString %s\n \t newLine 1\n", a->der->nodo); 
+			return;
+		}
+		fprintf(file,"\tdisplayString _%s\n \t newLine 1\n", a->der->nodo); 
     }
 
 	    if (strcmp(a->nodo, "READ") == 0) {
-        fprintf(file,"\n\t; GET\n");
-        fprintf(file, "\tgetString %s\n", a->der->nodo);
+        fprintf(file,"\n\t; obtengo por teclado\n");
+		if(strcmp(a->tipo, INT) == 0 || strcmp(a->tipo, CONSTINT) == 0){
+        	fprintf(file, "\tgetInteger %s\n", a->der->nodo);
+		} else {
+			fprintf(file, "\tgetFloat %s\n", a->der->nodo);
+		}
     }
 }
 
@@ -1144,7 +1213,7 @@ int main(int argc, char *argv[]) {
 		printf("Error al crear el archivo de tabla de simbolos\n");
 		exit(1);
 	}
-	//print2D(a); 
+	print2D(a); 
 	recorrer_arbol_inorden(pfi,a);
 	generar_assembler(a);
 	printf("Todo ok\n");

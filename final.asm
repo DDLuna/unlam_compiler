@@ -12,22 +12,33 @@ MAXTEXTSIZE equ 40
 	a dd ?
 	b dd ?
 	c dd ?
-	d db "soy una constante string",'$', 24 dup (?)
-	_3 dd 3.0
-	_3 dd 3.0
-	_2_23 dd 2.23.0
-	_lala db "lala",'$', 4 dup (?)
+	d dd ?
+	_3 dd 3
+	_4 dd 4
+	l dd 4
+	_entre_al_primer_then db "entre al primer then",'$', 20 dup (?)
+	_10 dd 10
+	_repeat_del_primer_if db "repeat del primer if",'$', 20 dup (?)
+	_2 dd 2
+	_5 dd 5
+	_entre_al_primer_else db "entre al primer else",'$', 20 dup (?)
+	_0 dd 0
+	_a_es_par db "a es par",'$', 8 dup (?)
+	_a_es_impar db "a es impar",'$', 10 dup (?)
+	_1 dd 1
+	_7_2 dd 7.2
+	_4_2 dd 4.2
 	@SUMA dd ?
 	@MENOS dd ?
 	@DIVIDIR dd ?
-	@MULTIPLAR dd ?
+	@MULTIPLICAR dd ?
 	@AUXILIAR dd ?
 
 
 .code
 
 
-	; ROUTINES
+	; RUTINAS
 STRLEN PROC
 	mov bx,0
 STRL01:
@@ -64,21 +75,44 @@ START:
 
 
 	; ASIGNACION 
-	FLD _3
-	FSTP a
-
-	; == 
-	FLD a
-	FLD _3
-	FCOM
-	JNE ETIQUETA_IF_2
+	FILD _3
+	FISTP a
 
 	; ASIGNACION 
-	FLD _2_23
-	FSTP c
-ETIQUETA_IF_2:
+	FILD _4
+	FISTP b
 
-	; STACK CLENUP
+	; != 
+	FILD a
+	FILD _3
+	FXCH
+	FCOM
+	FSTSW AX
+	SAHF
+
+	JE ETIQUETA_ELSE_0
+
+	; printeo
+	displayInteger l
+ 	newLine 1
+
+	; printeo
+	displayString _entre_al_primer_then
+ 	 newLine 1
+
+ETIQUETA_REPEAT_0:
+
+	; < 
+	FILD b
+	FILD _10
+	FXCH
+	FCOM
+	FSTSW AX
+	SAHF
+
+	JAE ETIQUETA_REPEAT_FUERA_0
+
+	; Limpar_pila
 	FFREE st(0)
 	FFREE st(1)
 	FFREE st(2)
@@ -89,25 +123,233 @@ ETIQUETA_IF_2:
 	FFREE st(7)
 
 
-	; DISPLAY
-	displayString d
+	; < 
+	FILD a
+	FILD _10
+	FXCH
+	FCOM
+	FSTSW AX
+	SAHF
+
+	JAE ETIQUETA_REPEAT_FUERA_0
+
+	; printeo
+	displayString _repeat_del_primer_if
  	 newLine 1
 
-	; DISPLAY
-	displayInteger a,3
+	; SUMA 
+	FILD b
+	FILD _2
+	FADD
+	FISTP @SUMA
+
+	; Limpar_pila
+	FFREE st(0)
+	FFREE st(1)
+	FFREE st(2)
+	FFREE st(3)
+	FFREE st(4)
+	FFREE st(5)
+	FFREE st(6)
+	FFREE st(7)
+
+
+	; ASIGNACION 
+	FILD @SUMA
+	FISTP b
+
+	; ASIGNACION 
+	FILD b
+	FISTP a
+
+	JMP ETIQUETA_REPEAT_0
+ETIQUETA_REPEAT_FUERA_0:
+
+	; printeo
+	displayInteger a
  	newLine 1
 
-	; DISPLAY
+	; printeo
+	displayInteger b
+ 	newLine 1
+
+	JMP ETIQUETA_IF_1
+ETIQUETA_ELSE_0:
+
+	; ASIGNACION 
+	FILD _5
+	FISTP a
+
+	; printeo
+	displayString _entre_al_primer_else
+ 	 newLine 1
+
+ETIQUETA_REPEAT_1:
+
+	; < 
+	FILD a
+	FILD _10
+	FXCH
+	FCOM
+	FSTSW AX
+	SAHF
+
+	JAE ETIQUETA_REPEAT_FUERA_1
+
+	; DIVIDE 
+	FILD a
+	FIDIV _2
+	FISTP @DIVIDIR
+
+	; Limpar_pila
+	FFREE st(0)
+	FFREE st(1)
+	FFREE st(2)
+	FFREE st(3)
+	FFREE st(4)
+	FFREE st(5)
+	FFREE st(6)
+	FFREE st(7)
+
+
+	; MULTIPLICA 
+	FILD _2
+	FILD @DIVIDIR
+	FMUL
+	FISTP @MULTIPLICAR
+
+	; Limpar_pila
+	FFREE st(0)
+	FFREE st(1)
+	FFREE st(2)
+	FFREE st(3)
+	FFREE st(4)
+	FFREE st(5)
+	FFREE st(6)
+	FFREE st(7)
+
+
+	; RESTA 
+	FILD a
+	FILD @MULTIPLICAR
+	FSUB
+	FISTP @MENOS
+
+	; Limpar_pila
+	FFREE st(0)
+	FFREE st(1)
+	FFREE st(2)
+	FFREE st(3)
+	FFREE st(4)
+	FFREE st(5)
+	FFREE st(6)
+	FFREE st(7)
+
+
+	; == 
+	FILD @MENOS
+	FILD _0
+	FXCH
+	FCOM
+	FSTSW AX
+	SAHF
+
+	JNE ETIQUETA_ELSE_1
+
+	; printeo
+	displayString _a_es_par
+ 	 newLine 1
+
+	; printeo
+	displayInteger a
+ 	newLine 1
+
+	JMP ETIQUETA_IF_1
+ETIQUETA_ELSE_1:
+
+	; printeo
+	displayString _a_es_impar
+ 	 newLine 1
+
+	; printeo
+	displayInteger a
+ 	newLine 1
+ETIQUETA_IF_1:
+
+	; Limpar_pila
+	FFREE st(0)
+	FFREE st(1)
+	FFREE st(2)
+	FFREE st(3)
+	FFREE st(4)
+	FFREE st(5)
+	FFREE st(6)
+	FFREE st(7)
+
+
+	; SUMA 
+	FILD a
+	FILD _1
+	FADD
+	FISTP @SUMA
+
+	; Limpar_pila
+	FFREE st(0)
+	FFREE st(1)
+	FFREE st(2)
+	FFREE st(3)
+	FFREE st(4)
+	FFREE st(5)
+	FFREE st(6)
+	FFREE st(7)
+
+
+	; ASIGNACION 
+	FILD @SUMA
+	FISTP a
+
+	JMP ETIQUETA_REPEAT_1
+ETIQUETA_REPEAT_FUERA_1:
+ETIQUETA_IF_12320960:
+
+	; Limpar_pila
+	FFREE st(0)
+	FFREE st(1)
+	FFREE st(2)
+	FFREE st(3)
+	FFREE st(4)
+	FFREE st(5)
+	FFREE st(6)
+	FFREE st(7)
+
+
+	; DIVIDE 
+	FLD _7_2
+	FDIV _4_2
+	FSTP @DIVIDIR
+
+	; Limpar_pila
+	FFREE st(0)
+	FFREE st(1)
+	FFREE st(2)
+	FFREE st(3)
+	FFREE st(4)
+	FFREE st(5)
+	FFREE st(6)
+	FFREE st(7)
+
+
+	; ASIGNACION 
+	FLD @DIVIDIR
+	FSTP c
+
+	; printeo
 	displayFloat c,3
  	newLine 1
 
-	; DISPLAY
-	displayString lala
- 	 newLine 1
 
 
-
-	; END PROGRAM 
+	; FIN PROGRAMA 
 
 	mov AX, 4C00h
 	int 21h

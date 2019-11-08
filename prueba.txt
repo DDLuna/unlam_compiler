@@ -1,13 +1,35 @@
 var
-	[integer,integer,float] : [a,b,c]
+	[integer,integer,float,integer] : [a,b,c,d]
 endvar
 
-const d = "soy una constante string"
 a = 3
-if a == 3 {
-c = 2.23
+b = 4
+
+if a <> 3 {
+	const l = 4
+	print l
+	print "entre al primer then"
+	repeat b < 10 && a < 10 {
+		print "repeat del primer if"
+		b = b + 2
+		a = b
+		}
+	print a
+	print b	
+} else {
+	a = 5
+	print "entre al primer else"
+	repeat a < 10 {
+	if a mod 2 == 0{
+		print "a es par"
+		print a
+	} else {
+		print "a es impar"
+		print a
+	}
+	a = a + 1
+	}
 }
-print d
-print a
+
+c = 7.2 / 4.2
 print c
-print "lala"
