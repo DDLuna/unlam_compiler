@@ -821,8 +821,8 @@ void recorrer(arbol* a) {
     }
 
 	if(strcmp(a->nodo, "CUERPO_IF") == 0){
-		fprintf(file,"\n\tJMP ETIQUETA_IF_%d:\n", ver_tope_sentencias(pila_if));
-		fprintf(file, "ETIQUETA_ELSE_%d\n", sacar_pila_sentencias(pila_else));
+		fprintf(file,"\n\tJMP ETIQUETA_IF_%d\n", ver_tope_sentencias(pila_if));
+		fprintf(file, "ETIQUETA_ELSE_%d:\n", sacar_pila_sentencias(pila_else));
 	}
 
    if (strcmp(a->nodo, "REPEAT") == 0) {
@@ -850,19 +850,19 @@ void recorrer(arbol* a) {
 
 char* obtener_operador(char* op) {
 	if (strcmp(op, ">=") == 0) {
-            return "JL";
+            return "JB";
     }
 
     if (strcmp(op, ">") == 0) {
-            return "JLE";
+            return "JBE";
     }
 
     if (strcmp(op, "<=") == 0) {
-            return "JG";
+            return "JA";
     }
 
     if (strcmp(op, "<") == 0) {
-            return "JGE";
+            return "JAE";
     }
 
     if (strcmp(op, "==") == 0) {
@@ -924,7 +924,7 @@ void procesar_nodo(arbol* a){
         fprintf(file,"\n\t; ASIGNACION \n");
         fprintf(file,"\tFLD %s\n", a->der->nodo);
         fprintf(file,"\tFSTP %s\n", a->izq->nodo);
-    }
+    } 
 
     if (strcmp(a->nodo, "+") == 0) {
         fprintf(file,"\n\t; SUMA \n");
@@ -978,7 +978,10 @@ void procesar_nodo(arbol* a){
         fprintf(file,"\n\t; >= \n");
         fprintf(file,"\tFLD %s\n", a->izq->nodo);
         fprintf(file,"\tFLD %s\n", a->der->nodo);
-        fprintf(file,"\tFCOM");
+        fprintf(file,"\tFXCH\n");
+        fprintf(file,"\tFCOM\n");
+        fprintf(file,"\tFSTSW AX\n");
+        fprintf(file,"\tSAHF\n");
         meter_pila_operadores(">=");        
     }
 
@@ -986,7 +989,10 @@ void procesar_nodo(arbol* a){
         fprintf(file,"\n\t; <= \n");
         fprintf(file,"\tFLD %s\n", a->izq->nodo);
         fprintf(file,"\tFLD %s\n", a->der->nodo);
-        fprintf(file,"\tFCOM");
+		fprintf(file,"\tFXCH\n");
+        fprintf(file,"\tFCOM\n");
+        fprintf(file,"\tFSTSW AX\n");
+        fprintf(file,"\tSAHF\n");
         meter_pila_operadores("<=");        
     }
 
@@ -994,7 +1000,10 @@ void procesar_nodo(arbol* a){
         fprintf(file,"\n\t; > \n");
         fprintf(file,"\tFLD %s\n", a->izq->nodo);
         fprintf(file,"\tFLD %s\n", a->der->nodo);
-        fprintf(file,"\tFCOM");
+		fprintf(file,"\tFXCH\n");
+        fprintf(file,"\tFCOM\n");
+        fprintf(file,"\tFSTSW AX\n");
+        fprintf(file,"\tSAHF\n");
         meter_pila_operadores(">");
     }
 
@@ -1002,7 +1011,10 @@ void procesar_nodo(arbol* a){
         fprintf(file,"\n\t; < \n");
         fprintf(file,"\tFLD %s\n", a->izq->nodo);
         fprintf(file,"\tFLD %s\n", a->der->nodo);
-        fprintf(file,"\tFCOM");
+		fprintf(file,"\tFXCH\n");
+        fprintf(file,"\tFCOM\n");
+        fprintf(file,"\tFSTSW AX\n");
+        fprintf(file,"\tSAHF\n");
         meter_pila_operadores("<");        
     }
 
@@ -1010,7 +1022,10 @@ void procesar_nodo(arbol* a){
         fprintf(file,"\n\t; == \n");
         fprintf(file,"\tFLD %s\n", a->izq->nodo);
         fprintf(file,"\tFLD %s\n", a->der->nodo);
-        fprintf(file,"\tFCOM");
+		fprintf(file,"\tFXCH\n");
+        fprintf(file,"\tFCOM\n");
+        fprintf(file,"\tFSTSW AX\n");
+        fprintf(file,"\tSAHF\n");
         meter_pila_operadores("==");        
     }
 
@@ -1018,7 +1033,10 @@ void procesar_nodo(arbol* a){
         fprintf(file,"\n\t; != \n");
         fprintf(file,"\tFLD %s\n", a->izq->nodo);
         fprintf(file,"\tFLD %s\n", a->der->nodo);
-        fprintf(file,"\tFCOM");
+		fprintf(file,"\tFXCH\n");
+        fprintf(file,"\tFCOM\n");
+        fprintf(file,"\tFSTSW AX\n");
+        fprintf(file,"\tSAHF\n");
         meter_pila_operadores("!=");        
     }
 
