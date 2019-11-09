@@ -1,56 +1,71 @@
 var
-	[integer,integer,float,integer] : [a,b,c,d]
+	[integer,integer,integer] : [a,b,c]
+	[float,float,float] : [d,e,f]
 endvar
 
-a = 3
-b = 4
+--/ inicio de variables /--
+b = 0
+e = 3.5
+f = 10.0
+const cincuenta = 50
+const comienzo = "Comienzo del programa"
 
-if a <> 3 {
-	const l = 4
-	print l
-	print "entre al primer then"
-	repeat b < 10 && a < 10 {
-		print "repeat del primer if"
-		b = b + 2
-		a = b
-		}
-	print a
-	print b	
-} else {
-	a = 5
-	print "entre al primer else"
-	repeat a < 10 {
-	if a mod 2 == 0{
-		print "a es par"
-		print a
-	} else {
-		print "a es impar"
-		print a
-	}
-	a = a + 1
-	}
+--/ programa --/ INICIO /-- programa/--
+print comienzo
+
+print "Ingrese un numero entero"
+read c
+
+if c mod 2 == 0 {
+	print "su numero es par"
+}else {
+	print "su numero es impar"
 }
 
-a = 10 / 3
-print a
+if c < cincuenta || c == cincuenta {
+	
+	if c == cincuenta {
+		print "su numero es 50"
+	}else{
+		print "su numero es menor que 50"
+	}
+}else{
+	print "su numero es mayor que 50"
+}
 
-c = 10.0 mod 3.12
-print c
+if c < 100 && c > 0 {
+	b = c
+	repeat c < 100 {
+		c = c * 2
+	}
+	b = c - b	
+}else {
+	b = c
+	repeat c < 200 {
+		c = c * 2
+	}
+	b = c - b
+}
 
-a = 6 mod 6
-print a
+if b <> 0 {
+	print "se aumento su numero en"
+	print b
+	print "ahora vale"
+	print c
+}
 
-a = 7 mod 6
-print a
+print "resto flotante"
+d = 9.5 mod e
+print d
 
-a = 8 mod 6
-print a
+print "suma entre flotantes"
+d = f + e
+print d
 
-a = 9 mod 6
-print a
+print "division entre flotantes"
+d = f / e
+print d
 
-a = 10 mod 6
-print a
-
-a = 11 mod 6
-print a
+print "division entera"
+a = 10 div 3
+print a 

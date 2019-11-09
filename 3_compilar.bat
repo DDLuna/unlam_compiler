@@ -1,3 +1,3 @@
-Segunda.exe prueba.txt
+Grupo12.exe prueba.txt
 
 pause

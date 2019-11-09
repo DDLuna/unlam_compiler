@@ -106,7 +106,7 @@ struct pila_para_sentencias* pila_repeat;
 struct pila_para_sentencias* pila_else;
 struct pila_para_operadores* pila_operadores;
 struct pila_para_if_y_repeat* pila_if_repeat;
-int contador_etiquetas_if;
+int contador_etiquetas_if = 0;
 int usar_misma_etiqueta_if = 0;
 int hubo_or = 0;
 int contador_etiquetas_repeat = 0;
@@ -205,7 +205,7 @@ char* op_log;
 /******SECCION DEFINICION DE REGLAS******/
 
 %%
-programaStart: programa {mostrar_errores(); escribir_tabla_de_simbolos(); printf("Compilación exitosa\n"); $$ = $1; a = $$;}
+programaStart: programa {mostrar_errores(); escribir_tabla_de_simbolos(); printf("\nCompilacion exitosa\n"); $$ = $1; a = $$;}
 ;
 
 programa: inicioVariables cuerpoPrograma {$$ = crear_nodo("PROG", NULL, NULL, $2);}
@@ -347,32 +347,34 @@ factor: PAR_A expresion PAR_C {$$ = $2;}
 
 /******SECCION CODIGO******/
 
-char* buscar_con_nombre_modificado(char* a){
+char* buscar_con_nombre_modificado(char* a) {
 	int i;
-	for(i = 0; i < puntero_tabla_simbolos; i++){
-		if(strcmp(tabla_simbolos_s[i].nombre + 1, a) == 0){
+	for(i = 0; i < puntero_tabla_simbolos; i++) {
+		if(strcmp(tabla_simbolos_s[i].nombre + 1, a) == 0) {
 			return tabla_simbolos_s[i].nombre;
 		}
 	}
 }
 
-void mostrar_errores(){
-	if (cantidad_errores == 0){
+void mostrar_errores() {
+	if (cantidad_errores == 0) {
 		return;
 	}
 	printf("Se han encontrado los siguientes errores: \n");
 	int i;
-	for (i = 0; i < cantidad_errores; i++){
+	for (i = 0; i < cantidad_errores; i++) {
 		printf("Cerca de la linea: %d\tError: %s\n", vector_errores[i].numero_de_linea, vector_errores[i].mensaje_error);
 	}
+
 	exit(1);
 }
 
-void establecer_error(char* error){
+void establecer_error(char* error) {
 	extern int numero_de_linea;
-	if (cantidad_errores != 0 && vector_errores[cantidad_errores - 1].numero_de_linea == numero_de_linea){
+	if (cantidad_errores != 0 && vector_errores[cantidad_errores - 1].numero_de_linea == numero_de_linea) {
 		return;
 	}
+
 	vector_errores[cantidad_errores].mensaje_error = error;
 	vector_errores[cantidad_errores].numero_de_linea = numero_de_linea;
 	cantidad_errores++;
@@ -397,6 +399,7 @@ const char* obtener_tipo(const char* id) {
 			return (strcasecmp(tabla_simbolos_s[i].tipo, FLOAT) == 0 || strcasecmp(tabla_simbolos_s[i].tipo, CONSTFLOAT) == 0) ? FLOAT : STRING;
 		}
 	}
+
 	establecer_error("Id no hallado");
 	return FLOAT; //retorno un generico para que no pinche y continue recolectando errores
 }
@@ -405,9 +408,10 @@ const char* obtener_tipo(const char* id) {
 * Dado dos tipos de dato, determina si son compatibles (mismo tipo) 
 */
 const char* verificar_conflicto_tipos(const char* a, const char* b) {
-	if (strcmp(a, b) == 0){
+	if (strcmp(a, b) == 0) {
 		return a;
 	} 	
+
 	establecer_error("Conflicto de tipos");
 	return FLOAT; //retorno un generico para que no pinche y continue recolectando errores
 }
@@ -419,6 +423,7 @@ arbol* crear_nodo(char* elemento, const char* tipo, arbol *izq, arbol *der) {
 		yyerror("No hay memoria");
 		exit(0);
 	}
+
 	a->nodo = elemento;
 	a->tipo = tipo;
 	a->izq = izq;
@@ -480,76 +485,85 @@ void guardar_tabla_de_simbolos(char* nombre, char* tipo, int es_id) {
 			return;
 			}
 	}	
+
 	if (es_id) {
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, nombre);
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].tipo, tipo); //agrego los datos. Un underscore en tipo represta una const.
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor,"-");
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud,"-");
 	} else {
-		if(es_constante_repetida(nombre)){
+		if(es_constante_repetida(nombre)) {
 			return;
 		}
+
 		if(strcmp(tipo, FLOAT) == 0 && es_float_repetido(nombre)){
 			return;
 		}
+
 		if (strcmp(tipo, STRING) == 0) { //si es un string y no es un id (algo como "hello hello hello"), guardo su longitud en la tabla.
 			nombre = remover_comillas(nombre);
 			itoa(strlen(nombre), cad, 10);
 			strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, cad); 
 		} else {
-		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, "-");
+			strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, "-");
 		}
+
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor, nombre);
 		nombre = cambiar_espacio_por_(nombre);
 		if(strcmp(tipo, FLOAT) == 0) {
 			strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, reemplazar_punto_por_(nombre));
-
 		}
+
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, strcat(guion, nombre));
 	}
+
 	puntero_tabla_simbolos++; //incremento la variable global del puntero para señalizar que agregué un elemento a la lista
 }
 
-char* cambiar_espacio_por_(char* a){
+char* cambiar_espacio_por_(char* a) {
 	char* aux = a;
-	while(*a != '\0'){
-		if(*a == ' '){
+	while (*a != '\0') {
+		if (*a == ' ') {
 			*a = '_';
 		}
 		a++;
 	}
+
 	return aux;
 }
 
-int es_constante_repetida(char* nombre){
+int es_constante_repetida(char* nombre) {
 	int i;
-	for(i = 0; i < puntero_tabla_simbolos; i++){
-	if(strcmp(tabla_simbolos_s[i].nombre + 1, nombre) == 0){
-		return 1;
+	for (i = 0; i < puntero_tabla_simbolos; i++) {
+		if (strcmp(tabla_simbolos_s[i].nombre + 1, nombre) == 0) {
+			return 1;
 		}	
 	}
-	
+
 	return 0;
 }
 
-int es_float_repetido(char* nombre){
+int es_float_repetido(char* nombre) {
 	char aux[101];
 	strcpy(aux, nombre);
 	reemplazar_punto_por_(aux);
-	if(es_constante_repetida(aux)){
+	if (es_constante_repetida(aux)) {
 		return 1;
 	}
+
 	return 0;
 }
 
-char* reemplazar_punto_por_(char* a){
+char* reemplazar_punto_por_(char* a) {
 	char* aux = a;
-	while(*a != '.' && *a != '\0'){
+	while (*a != '.' && *a != '\0') {
 		a++;	
 	}
-	if(*a == '.'){
+
+	if (*a == '.') {
 		*a = '_';
 	}
+
 	return aux;
 }
 
@@ -563,11 +577,13 @@ void guardar_cte_tabla_de_simbolos(char* nombre, char* tipo, char* valor_const) 
 			return;
 		}
 	}
+
 	if (strcmp(tipo, CONSTSTRING) == 0) { //si es un const string
 		valor_const = remover_comillas(valor_const);
 		itoa(strlen(valor_const),cad,10);
 		strcpy(tabla_simbolos_s[puntero_tabla_simbolos].longitud, cad); 
 	}
+
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].nombre, nombre);
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].tipo, tipo); //agrego los datos. 
 	strcpy(tabla_simbolos_s[puntero_tabla_simbolos].valor, valor_const);	
@@ -575,41 +591,44 @@ void guardar_cte_tabla_de_simbolos(char* nombre, char* tipo, char* valor_const) 
 }
 
 
-char* remover_comillas(char* s){
+char* remover_comillas(char* s) {
 	char* aux = s;
-	while(*(s+1) != '"'){
+	while (*(s+1) != '"') {
 		*s = *(s+1);
 		s++;
 	}
+
 	*s = '\0';
 	return aux;
 }
 
-struct tabla_simbolos* buscar_en_ts(char* nombre){
+struct tabla_simbolos* buscar_en_ts(char* nombre) {
 	int i;
-	for(i = 0; i < puntero_tabla_simbolos; i++){
-		if(strcmp(tabla_simbolos_s[i].nombre,nombre) == 0){
+	for (i = 0; i < puntero_tabla_simbolos; i++) {
+		if (strcmp(tabla_simbolos_s[i].nombre,nombre) == 0) {
 			return &tabla_simbolos_s[i];
 		}
 	}
+
 	return NULL;
 }
 
 void verificar_existencia(char* id) {
 	int i;
 	for (i = 0; i < puntero_tabla_simbolos; i++) {
-		if(strcmp(tabla_simbolos_s[i].nombre, id) == 0){  //Si el id existe en mi tabla, salgo.
+		if (strcmp(tabla_simbolos_s[i].nombre, id) == 0) {  //Si el id existe en mi tabla, salgo.
 				return;
 		}
 	}
+
 	printf("ID no declarado. Error de compilación");
 	exit(1);
 }
+
 void escribir_tabla_de_simbolos() {
 	FILE *pf; 
 	int i;
 	pf = fopen("ts.txt", "w"); 
-
 	if (!pf) {
 		printf("Error al crear el archivo de tabla de simbolos\n");
 		exit(1);
@@ -619,19 +638,19 @@ void escribir_tabla_de_simbolos() {
 	for (i = 0; i < puntero_tabla_simbolos; i++) {
 		fprintf(pf,"%s\t\t\t%s\t\t\t%s\t\t\t%s\n", tabla_simbolos_s[i].nombre, tabla_simbolos_s[i].tipo, tabla_simbolos_s[i].valor, tabla_simbolos_s[i].longitud);	
 	}
+
 	fclose(pf); 
 }
 
 /****SECCIÓN ASSEMBLER****/
 
-void generar_assembler(arbol* a){
+void generar_assembler(arbol* a) {
 	file = fopen("final.asm", "w");
-	if(!file){
+	if (!file) {
 		printf("Error al crear el archivo asembler\n");
 		exit(1);
 	}
-	contador_etiquetas_if = 0;
-    contador_etiquetas_repeat = 0;
+	
     pila_if = (struct pila_para_sentencias*) malloc(sizeof(struct pila_para_sentencias)); 
     pila_if->sentencia = (int*) malloc(5000* sizeof(int));
 	pila_if->tope = 0; 
@@ -672,12 +691,12 @@ void inicializar_assembler() {
 */
 void insertar_la_tabla_de_simbolos() {
 	int i;
-	for(i = 0; i < puntero_tabla_simbolos; i++) {
-
-		if(tabla_simbolos_s[i].nombre[0] == '_') {
+	for (i = 0; i < puntero_tabla_simbolos; i++) {
+		if (tabla_simbolos_s[i].nombre[0] == '_') {
 			escribir_cte(tabla_simbolos_s[i]);
 		}
-		if(strcmp(tabla_simbolos_s[i].tipo, INT) == 0 || strcmp(tabla_simbolos_s[i].tipo, FLOAT) == 0) {
+
+		if (strcmp(tabla_simbolos_s[i].tipo, INT) == 0 || strcmp(tabla_simbolos_s[i].tipo, FLOAT) == 0) {
 			fprintf(file,"\t%s dd ?\n", tabla_simbolos_s[i].nombre);
 		}
 
@@ -685,24 +704,23 @@ void insertar_la_tabla_de_simbolos() {
            fprintf(file,"\t_%s db \"%s\",'$', %s dup (?)\n", tabla_simbolos_s[i].nombre, tabla_simbolos_s[i].valor, tabla_simbolos_s[i].longitud);
         }
 
-		 if (strcmp(tabla_simbolos_s[i].tipo, CONSTINT) == 0) {
+		if (strcmp(tabla_simbolos_s[i].tipo, CONSTINT) == 0) {
             fprintf(file,"\t%s dd %s\n", tabla_simbolos_s[i].nombre, tabla_simbolos_s[i].valor);
         }
 
         if (strcmp(tabla_simbolos_s[i].tipo, CONSTFLOAT) == 0) {
             fprintf(file,"\t%s dd %s\n", tabla_simbolos_s[i].nombre, tabla_simbolos_s[i].valor);
         }
-
 	}
 }
 
 void escribir_cte(struct tabla_simbolos ts) {
-	if(strcmp(ts.longitud,"-") != 0){
+	if (strcmp(ts.longitud,"-") != 0) {
 		fprintf(file,"\t%s db \"%s\",'$', %s dup (?)\n", ts.nombre, ts.valor, ts.longitud);
 		return;
 	}
 
-	if(contiene_punto(ts.valor)){
+	if (contiene_punto(ts.valor)) {
 		fprintf(file,"\t%s dd %s\n", ts.nombre, ts.valor);
 		return;
 	}
@@ -711,22 +729,22 @@ void escribir_cte(struct tabla_simbolos ts) {
 	return;
 }
 
-int contiene_punto(const char* a){
-	while(*a != '\0' && *a != '.'){
+int contiene_punto(const char* a) {
+	while (*a != '\0' && *a != '.') {
 		a++;
 	}	
-	return (*a == '.') ? 1 : 0;
 
+	return (*a == '.') ? 1 : 0;
 }
 
 void insertar_bloque_de_codigo_inicial() {
-	    fprintf(file,"\n\n");
+	fprintf(file,"\n\n");
     fprintf(file,".code\n");
 	insertar_rutinas();
     fprintf(file,"\n\n");
 }
 
-void insertar_auxiliares(){
+void insertar_auxiliares() {
 	fprintf(file,"\t@SUMA dd ?\n");
     fprintf(file,"\t@MENOS dd ?\n");
     fprintf(file,"\t@DIVIDIR dd ?\n");
@@ -734,7 +752,7 @@ void insertar_auxiliares(){
     fprintf(file,"\t@AUXILIAR dd ?\n");
 }
 
-void insertar_rutinas(){
+void insertar_rutinas() {
     fprintf(file, "\n\n\t; RUTINAS\n");
     fprintf(file, "STRLEN PROC\n");
     fprintf(file, "\tmov bx,0\n");
@@ -747,8 +765,6 @@ void insertar_rutinas(){
     fprintf(file, "STREND:\n");
     fprintf(file, "\tret\n");
     fprintf(file, "STRLEN ENDP\n\n");
-
-
     fprintf(file, "COPY PROC\n");
     fprintf(file, "\tcall STRLEN\n");
     fprintf(file, "\tcmp bx,MAXTEXTSIZE\n");
@@ -763,27 +779,25 @@ void insertar_rutinas(){
     fprintf(file, "\tret\n");
     fprintf(file, "COPY ENDP\n\n");
 	fprintf(file, "START:\n");
-
 	fprintf(file,"\tmov AX,@DATA\n");
     fprintf(file,"\tmov DS,AX\n");
     fprintf(file,"\tmov ES,AX\n");
     fprintf(file,"\tfinit\n\n");
 }
 
-void finalizar_assembler(){
+void finalizar_assembler() {
     fprintf(file,"\n\n\n\t; FIN PROGRAMA \n\n");
     fprintf(file,"\tmov AX, 4C00h\n");
     fprintf(file,"\tint 21h\n");
-   
     fprintf(file,"END START\n");
 }
 
 void recorrer(arbol* a) {
-	if(!a){
+	if (!a) {
 		return;
 	}
 
-	    if (strcmp(a->nodo, "REPEAT") == 0) {
+	if (strcmp(a->nodo, "REPEAT") == 0) {
         fprintf(file,"\nETIQUETA_REPEAT_%d:\n", contador_etiquetas_repeat);
         poner_pila_sentencias(pila_repeat, contador_etiquetas_repeat);
         poner_pila_sentencias(pila_repeat, contador_etiquetas_repeat);
@@ -791,112 +805,117 @@ void recorrer(arbol* a) {
 		meter_pila_if_repeat("REPEAT");
     }
 
-	    if (strcmp(a->nodo, "IF") == 0) {
+	if (strcmp(a->nodo, "IF") == 0) {
         contador_etiquetas_if++;
 		meter_pila_if_repeat("IF");
-		if(strcmp(a->der->nodo, "CUERPO_IF") == 0) {
-				contador_else++;
-		}
+			if (strcmp(a->der->nodo, "CUERPO_IF") == 0) {
+					contador_else++;
+			}
     }	
 
-		if(strcmp(a->nodo, "!") == 0){
+	if(strcmp(a->nodo, "!") == 0) {
 		debo_invertir_operador = 1;
 	}
 	
 	recorrer(a->izq);
-	    if (strcmp(a->nodo, "AND") == 0) {
-				char* op = sacar_pila_operadores();
-			if(strcmp(sacar_pila_if_repeat(),"IF") == 0){
-				usar_misma_etiqueta_if = 1;
-				if(contador_else == 0){
+	if (strcmp(a->nodo, "AND") == 0) {
+		char* op = sacar_pila_operadores();
+		if (strcmp(sacar_pila_if_repeat(),"IF") == 0) {
+			usar_misma_etiqueta_if = 1;
+				if (contador_else == 0) {
 					fprintf(file, "\n\t%s ETIQUETA_IF_%d\n", obtener_operador(op),contador_etiquetas_if);
 				} else {
 					fprintf(file, "\n\t%s ETIQUETA_ELSE_%d\n", obtener_operador(op), contador_etiqueta_else);
 					contador_else--;
 				}
-				poner_pila_sentencias(pila_if, contador_etiquetas_if);
+
+			poner_pila_sentencias(pila_if, contador_etiquetas_if);
 		} else {
 			usar_misma_etiqueta_repeat = 1;
 			fprintf(file, "\n\t%s ETIQUETA_REPEAT_FUERA_%d\n", obtener_operador(op),ver_tope_sentencias(pila_repeat));
 		}
+
 		limpiar_pila();
 		hubo_and = 1;
     }
 
-	    if (strcmp(a->nodo, "OR") == 0) {
-			char* op = sacar_pila_operadores();
-			if(strcmp(sacar_pila_if_repeat(),"IF") == 0){
+	if (strcmp(a->nodo, "OR") == 0) {
+		char* op = sacar_pila_operadores();
+		if (strcmp(sacar_pila_if_repeat(),"IF") == 0) {
 			usar_misma_etiqueta_if = 0;  
-				if(contador_else == 0){
+			if (contador_else == 0) {
 				fprintf(file, "\n\t%s ETIQUETA_IF_%d\n", obtener_operador_contrario(op), contador_etiquetas_if); //Si en el OR la primera me da verdadera, salto (por el operador posta, si tengo > salto por mayor) al then.
 				poner_pila_sentencias(pila_if, contador_etiquetas_if);
-				} else {
+			} else {
 				fprintf(file, "\n\t%s ETIQUETA_IF_ADENTRO_%d\n", obtener_operador_contrario(op), contador_etiqueta_else);	
 				poner_pila_sentencias(pila_else, contador_etiqueta_else);
 				contador_else--;
-				}
-			} else {
-				fprintf(file, "\n\t%s ETIQUETA_REPEAT_DENTRO_%d\n", obtener_operador_contrario(op), ver_tope_sentencias(pila_repeat));
 			}
+		} else {
+			fprintf(file, "\n\t%s ETIQUETA_REPEAT_DENTRO_%d\n", obtener_operador_contrario(op), ver_tope_sentencias(pila_repeat));
+		}
+
         limpiar_pila();
         hubo_or = 1;
     }
 		
-	    if (strcmp(a->nodo, "IF") == 0) {
-			char* op = sacar_pila_operadores();
-			if(strcmp(a->der->nodo, "CUERPO_IF") != 0){
-				if (usar_misma_etiqueta_if != 1) {
-					contador_etiquetas_if++;
-				} else {
-					usar_misma_etiqueta_if = 0;
-				}
-				fprintf(file, "\n\t%s ETIQUETA_IF_%d\n", obtener_operador(op),contador_etiquetas_if);
-
-				if (hubo_or) {
-					fprintf(file,"ETIQUETA_IF_%d:\n", sacar_pila_sentencias(pila_if));
-					hubo_or = 0;
-				}
+	if (strcmp(a->nodo, "IF") == 0) {
+		char* op = sacar_pila_operadores();
+		if (strcmp(a->der->nodo, "CUERPO_IF") != 0) {
+			if (usar_misma_etiqueta_if != 1) {
+				contador_etiquetas_if++;
 			} else {
-				fprintf(file, "\n\t%s ETIQUETA_ELSE_%d\n", obtener_operador(op),contador_etiqueta_else);
-				if(hubo_or){
-					fprintf(file, "ETIQUETA_IF_ADENTRO_%d:\n", sacar_pila_sentencias(pila_else));
-					hubo_or = 0;
-				}
-				poner_pila_sentencias(pila_else, contador_etiqueta_else);
-				contador_etiqueta_else++;
+				usar_misma_etiqueta_if = 0;
 			}
-			if(!hubo_and) {
-					poner_pila_sentencias(pila_if, contador_etiquetas_if);
-				}
-			hubo_and = 0;
+
+			fprintf(file, "\n\t%s ETIQUETA_IF_%d\n", obtener_operador(op),contador_etiquetas_if);
+			if (hubo_or) {
+				fprintf(file,"ETIQUETA_IF_%d:\n", sacar_pila_sentencias(pila_if));
+				hubo_or = 0;
+			}
+		} else {
+			fprintf(file, "\n\t%s ETIQUETA_ELSE_%d\n", obtener_operador(op),contador_etiqueta_else);
+			if (hubo_or) {
+				fprintf(file, "ETIQUETA_IF_ADENTRO_%d:\n", sacar_pila_sentencias(pila_else));
+				hubo_or = 0;
+			}
+
+			poner_pila_sentencias(pila_else, contador_etiqueta_else);
+			contador_etiqueta_else++;
+		}
+		
+		if (!hubo_and) {
+			poner_pila_sentencias(pila_if, contador_etiquetas_if);
+		}
+
+		hubo_and = 0;
     }
 
-	if(strcmp(a->nodo, "CUERPO_IF") == 0){
+	if (strcmp(a->nodo, "CUERPO_IF") == 0) {
 		fprintf(file,"\n\tJMP ETIQUETA_IF_%d\n", ver_tope_sentencias(pila_if));
 		fprintf(file, "ETIQUETA_ELSE_%d:\n", sacar_pila_sentencias(pila_else));
 	}
 
-   if (strcmp(a->nodo, "REPEAT") == 0) {
+    if (strcmp(a->nodo, "REPEAT") == 0) {
         char* op = sacar_pila_operadores();		
 		int valor = sacar_pila_sentencias(pila_repeat);
         fprintf(file,"\n\t%s ETIQUETA_REPEAT_FUERA_%d\n", obtener_operador(op), valor);
-		if(hubo_or) {
+		if (hubo_or) {
 			fprintf(file, "ETIQUETA_REPEAT_DENTRO_%d:\n", valor);
 			hubo_or = 0;
 		}
     }
 
 	recorrer(a->der);
-
 	if (strcmp(a->nodo, "REPEAT") == 0) {
         int valor = sacar_pila_sentencias(pila_repeat);
         fprintf(file,"\n\t%JMP ETIQUETA_REPEAT_%d\n", valor);
         fprintf(file,"ETIQUETA_REPEAT_FUERA_%d:\n", valor);
     }
+
 	//printf("%s ", a->nodo);
 	procesar_nodo(a);
 	//printf("Soy %s y termine de procesarme \n", a->nodo);
-
 }
 
 char* obtener_operador(char* op) {
@@ -952,35 +971,37 @@ char* obtener_operador_contrario(char* op) {
 }
 
 void limpiar_pila() {
-     fprintf(file, "\n\t; Limpar_pila\n"); 
-     fprintf(file, "\tFFREE st(0)\n");
-     fprintf(file, "\tFFREE st(1)\n");
-     fprintf(file, "\tFFREE st(2)\n");
-     fprintf(file, "\tFFREE st(3)\n");
-     fprintf(file, "\tFFREE st(4)\n");
-     fprintf(file, "\tFFREE st(5)\n");
-     fprintf(file, "\tFFREE st(6)\n");
-     fprintf(file, "\tFFREE st(7)\n");
-     fprintf(file, "\n");
+    fprintf(file, "\n\t; Limpar_pila\n"); 
+    fprintf(file, "\tFFREE st(0)\n");
+    fprintf(file, "\tFFREE st(1)\n");
+    fprintf(file, "\tFFREE st(2)\n");
+    fprintf(file, "\tFFREE st(3)\n");
+    fprintf(file, "\tFFREE st(4)\n");
+    fprintf(file, "\tFFREE st(5)\n");
+    fprintf(file, "\tFFREE st(6)\n");
+    fprintf(file, "\tFFREE st(7)\n");
+    fprintf(file, "\n");
 }
 
 void procesar_nodo(arbol* a){
-	if(a->tipo != NULL && (strcmp(a->tipo, INT) == 0 || strcmp(a->tipo, CONSTINT) == 0)){
+	if (a->tipo != NULL && (strcmp(a->tipo, INT) == 0 || strcmp(a->tipo, CONSTINT) == 0)) {
 		cargar = "FILD";
 		asignar = "FISTP";
 		instruccion_dividir = "FIDIV";
-	}  else {
+	} else {
 		cargar = "FLD";
 		asignar = "FSTP";
 		instruccion_dividir = "FDIV";
 	}
+
 	if (strcmp(a->nodo, "=") == 0) {
         if (strcmp(a->der->nodo, "@SUMA") != 0 && strcmp(a->der->nodo, "@MENOS") != 0 && strcmp(a->der->nodo, "@MULTIPLICAR") != 0 && strcmp(a->der->nodo, "@DIVIDIR") != 0) {
             struct tabla_simbolos* simbolo = buscar_en_ts(a->izq->nodo);
-            if(simbolo != NULL && strcmp(simbolo->longitud, "-") != 0)  {
-                return;
-            }
-        }    
+	        if (simbolo != NULL && strcmp(simbolo->longitud, "-") != 0)  {
+	            return;
+	        }
+        } 
+
         fprintf(file,"\n\t; ASIGNACION \n");
         fprintf(file,"\t%s %s\n", cargar, a->der->nodo);
         fprintf(file,"\t%s %s\n", asignar, a->izq->nodo);
@@ -1026,7 +1047,7 @@ void procesar_nodo(arbol* a){
         limpiar_pila();
     }
 
-	if(strcmp(a->nodo, "MOD") == 0){
+	if(strcmp(a->nodo, "MOD") == 0) {
 		fprintf(file,"\n\t;RESIDUO\n");
 		fprintf(file,"\t%s %s\n", cargar, a->der->nodo);
 		fprintf(file,"\t%s %s\n", cargar, a->izq->nodo);
@@ -1036,15 +1057,15 @@ void procesar_nodo(arbol* a){
 		limpiar_pila();
 	}
 
-	if(debo_invertir_operador){
+	if (debo_invertir_operador) {
 		char* aux = invertir_operador(a->nodo);
-		if(aux){
+		if (aux) {
 			a->nodo = aux;
 			debo_invertir_operador = 0;
 		}
 	}
 
-	    if (strcmp(a->nodo, ">=") == 0) {
+	if (strcmp(a->nodo, ">=") == 0) {
         fprintf(file,"\n\t; >= \n");
         fprintf(file,"\t%s %s\n", cargar, a->izq->nodo);
         fprintf(file,"\t%s %s\n", cargar, a->der->nodo);
@@ -1055,7 +1076,7 @@ void procesar_nodo(arbol* a){
         meter_pila_operadores(">=");        
     }
 
-	    if (strcmp(a->nodo, "<=") == 0) {
+	if (strcmp(a->nodo, "<=") == 0) {
         fprintf(file,"\n\t; <= \n");
         fprintf(file,"\t%s %s\n", cargar, a->izq->nodo);
         fprintf(file,"\t%s %s\n", cargar, a->der->nodo);
@@ -1066,7 +1087,7 @@ void procesar_nodo(arbol* a){
         meter_pila_operadores("<=");        
     }
 
-	    if (strcmp(a->nodo, ">") == 0) {
+	if (strcmp(a->nodo, ">") == 0) {
         fprintf(file,"\n\t; > \n");
         fprintf(file,"\t%s %s\n", cargar, a->izq->nodo);
         fprintf(file,"\t%s %s\n", cargar, a->der->nodo);
@@ -1077,7 +1098,7 @@ void procesar_nodo(arbol* a){
         meter_pila_operadores(">");
     }
 
-	    if (strcmp(a->nodo, "<") == 0) {
+	if (strcmp(a->nodo, "<") == 0) {
         fprintf(file,"\n\t; < \n");
         fprintf(file,"\t%s %s\n", cargar, a->izq->nodo);
         fprintf(file,"\t%s %s\n", cargar, a->der->nodo);
@@ -1088,7 +1109,7 @@ void procesar_nodo(arbol* a){
         meter_pila_operadores("<");        
     }
 
-	    if (strcmp(a->nodo, "==") == 0) {
+	if (strcmp(a->nodo, "==") == 0) {
         fprintf(file,"\n\t; == \n");
         fprintf(file,"\t%s %s\n", cargar, a->izq->nodo);
         fprintf(file,"\t%s %s\n", cargar,a->der->nodo);
@@ -1099,7 +1120,7 @@ void procesar_nodo(arbol* a){
         meter_pila_operadores("==");        
     }
 
-	    if (strcmp(a->nodo, "!=") == 0) {
+	if (strcmp(a->nodo, "!=") == 0) {
         fprintf(file,"\n\t; != \n");
         fprintf(file,"\t%s %s\n", cargar, a->izq->nodo);
         fprintf(file,"\t%s %s\n", cargar, a->der->nodo);
@@ -1110,34 +1131,35 @@ void procesar_nodo(arbol* a){
         meter_pila_operadores("!=");        
     }
 
-	    if (strcmp(a->nodo, "IF") == 0) {
+	if (strcmp(a->nodo, "IF") == 0) {
         fprintf(file,"ETIQUETA_IF_%d:\n", sacar_pila_sentencias(pila_if));
         contador_etiquetas_if++;
         limpiar_pila();	
     }
 
-	    if (strcmp(a->nodo, "PRINT") == 0) {
+	if (strcmp(a->nodo, "PRINT") == 0) {
         fprintf(file,"\n\t; printeo\n");
-
-		if(strcmp(a->tipo, INT) == 0 || strcmp(a->tipo, CONSTINT) == 0){
+		if (strcmp(a->tipo, INT) == 0 || strcmp(a->tipo, CONSTINT) == 0) {
 			fprintf(file,"\tdisplayInteger %s\n \tnewLine 1\n", a->der->nodo);
 			return;
 		}
-		if(strcmp(a->tipo, FLOAT) == 0 || strcmp(a->tipo, CONSTFLOAT) == 0){
+
+		if (strcmp(a->tipo, FLOAT) == 0 || strcmp(a->tipo, CONSTFLOAT) == 0) {
 			fprintf(file, "\tdisplayFloat %s,3\n \tnewLine 1\n", a->der->nodo);
 			return;
 		}
-		
-		if(a->der->tipo != NULL) {
+
+		if (a->der->tipo != NULL) {
     	    fprintf(file,"\tdisplayString %s\n \t newLine 1\n", a->der->nodo); 
 			return;
 		}
+
 		fprintf(file,"\tdisplayString _%s\n \t newLine 1\n", a->der->nodo); 
     }
 
-	    if (strcmp(a->nodo, "READ") == 0) {
+	if (strcmp(a->nodo, "READ") == 0) {
         fprintf(file,"\n\t; obtengo por teclado\n");
-		if(strcmp(a->tipo, INT) == 0 || strcmp(a->tipo, CONSTINT) == 0){
+		if (strcmp(a->tipo, INT) == 0 || strcmp(a->tipo, CONSTINT) == 0) {
         	fprintf(file, "\tgetInteger %s\n", a->der->nodo);
 		} else {
 			fprintf(file, "\tgetFloat %s\n", a->der->nodo);
@@ -1145,45 +1167,41 @@ void procesar_nodo(arbol* a){
     }
 }
 
-char* invertir_operador(char* operador){
-	if(strcmp(operador, ">") == 0){
+char* invertir_operador(char* operador) {
+	if (strcmp(operador, ">") == 0) {
 		return "<=";
 	}
 
-	if(strcmp(operador, "<") == 0){
+	if (strcmp(operador, "<") == 0) {
 		return ">=";
 	}
 
-	if(strcmp(operador, "<=") == 0){
+	if (strcmp(operador, "<=") == 0) {
 		return ">";
 	}
 
-	if(strcmp(operador, ">=") == 0){
+	if (strcmp(operador, ">=") == 0) {
 		return "<";
 	}
 
-	if(strcmp(operador, "==") == 0){
+	if (strcmp(operador, "==") == 0) {
 		return "!=";
 	}
 
-	if(strcmp(operador, "!=") == 0){
+	if (strcmp(operador, "!=") == 0) {
 		return "==";
 	}
 
 	return NULL;
-
 }
 
 int sacar_pila_sentencias(struct pila_para_sentencias* pila) { 
-    
     return pila->sentencia[pila->tope--];
 }
-
 
 void poner_pila_sentencias(struct pila_para_sentencias* pila, int item) { 
     pila->tope++;
 	pila->sentencia[pila->tope] = item; 
-
 } 
 
 char* sacar_pila_operadores() { 
@@ -1195,16 +1213,16 @@ void meter_pila_operadores(char* item) {
     strcpy(pila_operadores->operador[pila_operadores->tope],item); 
 }
 
-int ver_tope_sentencias(struct pila_para_sentencias* pila){
+int ver_tope_sentencias(struct pila_para_sentencias* pila) {
 	return pila->sentencia[pila->tope];
 }
 
-void meter_pila_if_repeat(char* tipo){
+void meter_pila_if_repeat(char* tipo) {
 	pila_if_repeat->tope++;
 	strcpy(pila_if_repeat->tipo[pila_if_repeat->tope],tipo);
 }
 
-char* sacar_pila_if_repeat(){
+char* sacar_pila_if_repeat() {
 	return pila_if_repeat->tipo[pila_if_repeat->tope--];
 }
 
@@ -1223,11 +1241,11 @@ int main(int argc, char *argv[]) {
 		printf("Error al crear el archivo de tabla de simbolos\n");
 		exit(1);
 	}
-	print2D(a); 
+
+	//print2D(a); //Print arbol en consola 
 	recorrer_arbol_inorden(pfi,a);
 	generar_assembler(a);
-	printf("Todo ok\n");
-
+	//printf("Todo ok\n");
   	fclose(yyin);
   	return 0;
 }

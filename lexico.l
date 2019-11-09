@@ -140,5 +140,5 @@ void verificarNivelComentario() {
 			exit(1);
 		}
 
-	printf("\nHa introducido un comentario de nivel %d",nivelMaximo-nivelComentario);
+	//printf("\nHa introducido un comentario de nivel %d",nivelMaximo-nivelComentario);
 }
