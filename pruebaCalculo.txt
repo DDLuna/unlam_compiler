@@ -1,0 +1,5 @@
+var
+	[integer, integer, integer, integer, integer, integer, integer] : [z, a, b, c , d, e ,f]
+endvar
+
+z = a + b * c - d / (e + f) + 20

@@ -2,5 +2,9 @@ del lex.yy.c
 del y.tab.c
 del y.output
 del y.tab.h
-del segunda.exe
+del Grupo12.exe
 del ts.txt
+del intermedia.txt
+del final.asm
+del final.exe
+del final.obj
