@@ -1246,7 +1246,7 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-	print2D(a); //Print arbol en consola 
+	//print2D(a); //Print arbol en consola 
 	recorrer_arbol_inorden(pfi,a);
 	generar_assembler(a);
 	//printf("Todo ok\n");
