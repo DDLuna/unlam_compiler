@@ -869,8 +869,12 @@ void recorrer(arbol* a) {
 			}
 
 			fprintf(file, "\n\t%s ETIQUETA_IF_%d\n", obtener_operador(op),contador_etiquetas_if);
-			if (hubo_or) {
+			if (!hubo_or) {
 				fprintf(file,"ETIQUETA_IF_%d:\n", sacar_pila_sentencias(pila_if));
+				hubo_or = 0;
+			}
+			else{
+				fprintf(file,"ETIQUETA_IF_ADENTRO_%d:\n", sacar_pila_sentencias(pila_else));
 				hubo_or = 0;
 			}
 		} else {
@@ -1242,7 +1246,7 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-	//print2D(a); //Print arbol en consola 
+	print2D(a); //Print arbol en consola 
 	recorrer_arbol_inorden(pfi,a);
 	generar_assembler(a);
 	//printf("Todo ok\n");

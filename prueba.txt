@@ -64,6 +64,12 @@ if b <> 0 {
 	print c
 }
 
+--/ if con condicion or /--
+if 1 > 100 || 1 > 0
+	print "1 es mayor a cero"
+else
+	print "aca no entra"
+
 --/ repeats anidados /--
 repeat i < 3 {
 	repeat j < 3 {
